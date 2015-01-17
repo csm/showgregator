@@ -1,0 +1,8 @@
+apply plugin: 'scala'
+
+dependencies {
+    compile 'org.scala-lang:scala-library:2.10.4'
+    compile 'com.netflix.karyon:karyon-core:2.0.02'
+    compile 'com.twitter:finagle-core_2.10:6.24.0'
+    compile 'com.datastax.cassandra:cassandra-driver-core:2.1.4'
+}

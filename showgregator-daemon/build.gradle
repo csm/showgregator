@@ -1,0 +1,7 @@
+apply plugin: 'scala'
+
+dependencies {
+    compile 'org.scala-lang:scala-library:2.10.4'
+    compile 'nu.validator.htmlparser:htmlparser:1.4'
+    compile 'net.sf.biweekly:biweekly:0.4.0'
+}

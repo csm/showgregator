@@ -1,0 +1,3 @@
+Finagle-based web service that handles input from the daemon, and provides output to clients (JSON-backed web pages, iCal feeds, RSS feeds).
+
+Cassandra backend, Solr searching.

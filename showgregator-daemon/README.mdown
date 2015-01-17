@@ -1,0 +1,17 @@
+# Showgregator daemon
+
+Poll internet sites, based on a configuration, and turn sites into event data.
+
+Configuration should be CSS-like: describe a path in the DOM via elements, classes, or ids, and extract content for shows.
+
+Fields we will look for:
+
+* location, may be a static location (i.e., the web site of a venue)
+* date and time
+* performer
+* links to follow (tickets link, especially)
+* price
+
+Also, ingest iCal and RSS feeds, if available.
+
+* http://sourceforge.net/p/biweekly/wiki/Home/
