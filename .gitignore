@@ -1,0 +1,6 @@
+# Created by .ignore support plugin (hsz.mobi)
+showgregator-service/showgregator-service.iml
+showgregator-daemon/showgregator-daemon.iml
+showgregator.iml
+.gradle
+.idea
