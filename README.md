@@ -5,5 +5,8 @@ Here's the idea:
     * If some sites are shittier than others, add custom parsing.
 3. Aggregate these into a big database.
 4. Provide a clean front-end that lets you view web/iCal/RSS events, query by location, date, etc.
+5. Let users sign up, create their own calendars, calendars shared among groups of friends, etc.
+    * Participants in a calendar can view events added (as iCal or RSS too), add events (subject to creator's permissions), comment on events, upvote/downvote events.
+    * To participate in a calendar, you don't need an account, just an email address (though we would encourage creating accounts).
 
 License: GNU Affero General Public License v3.
