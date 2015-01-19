@@ -9,6 +9,12 @@ Here's the idea:
     * Participants in a calendar can view events added (as iCal or RSS too), add events (subject to creator's permissions), comment on events, upvote/downvote events.
     * To participate in a calendar, you don't need an account, just an email address (though we would encourage creating accounts).
 6. Public calendars, by region.
-    * Includes 
+    * Includes public events within that region.
+
+## Parts
+
+* showgregator-daemon -- scrapes configured sites for show information; pushes that to the service. Scala.
+* showgregator-service -- JSON REST service that handles input from the daemon, serves up user data to the frontend. Scala.
+* showgregator-web -- AngularJS front end, calls the service for data.
 
 License: GNU Affero General Public License v3.
