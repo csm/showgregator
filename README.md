@@ -8,5 +8,7 @@ Here's the idea:
 5. Let users sign up, create their own calendars, calendars shared among groups of friends, etc.
     * Participants in a calendar can view events added (as iCal or RSS too), add events (subject to creator's permissions), comment on events, upvote/downvote events.
     * To participate in a calendar, you don't need an account, just an email address (though we would encourage creating accounts).
+6. Public calendars, by region.
+    * Includes 
 
 License: GNU Affero General Public License v3.
