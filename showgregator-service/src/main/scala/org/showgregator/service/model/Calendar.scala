@@ -4,13 +4,12 @@ import java.util.UUID
 
 import com.datastax.driver.core.{Row, BoundStatement, Session}
 
+import scala.concurrent.Future
 import scala.util.parsing.json.JSONObject
 
-/**
- * Created by cmarshall on 1/18/15.
- */
-
 object Calendar {
+  import RichListenableFuture._
+
   def fromJson(obj: JSONObject):Calendar = {
     new Calendar(obj.obj.get("id") match {
       case Some(s:String) => UUID.fromString(s)
@@ -19,6 +18,10 @@ object Calendar {
       case Some(s:String) => s
       case _ => throw new IllegalArgumentException
     })
+  }
+
+  def fromCassandra(session: Session, id: UUID):Future[Calendar] = {
+    session.executeAsync("SELECT * FROM calendars WHERE id = ?;", id).asScala.map(rs => fromRow(rs.one()))
   }
 
   def fromRow(row: Row): Calendar = {

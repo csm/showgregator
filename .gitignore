@@ -4,3 +4,4 @@ showgregator-daemon/showgregator-daemon.iml
 showgregator.iml
 .gradle
 .idea
+showgregator-web/showgregator-web.iml
