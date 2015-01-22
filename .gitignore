@@ -5,3 +5,4 @@ showgregator.iml
 .gradle
 .idea
 showgregator-web/showgregator-web.iml
+showgregator-core/showgregator-core.iml

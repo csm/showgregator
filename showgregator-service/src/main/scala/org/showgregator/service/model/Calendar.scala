@@ -2,44 +2,19 @@ package org.showgregator.service.model
 
 import java.util.UUID
 
-import com.datastax.driver.core.{Row, BoundStatement, Session}
+import com.datastax.driver.core.Row
 
-import scala.concurrent.Future
-import scala.util.parsing.json.JSONObject
+import com.websudos.phantom.CassandraTable
+import com.websudos.phantom.Implicits.{StringColumn, UUIDColumn}
+import com.websudos.phantom.keys.PartitionKey
+import com.websudos.phantom.column.MapColumn
 
-object Calendar {
-  import RichListenableFuture._
+case class Calendar(id: UUID, title: String, acl: Map[String, Int])
 
-  def fromJson(obj: JSONObject):Calendar = {
-    new Calendar(obj.obj.get("id") match {
-      case Some(s:String) => UUID.fromString(s)
-      case _ => throw new IllegalArgumentException
-    }, obj.obj.get("name") match {
-      case Some(s:String) => s
-      case _ => throw new IllegalArgumentException
-    })
-  }
+sealed class CalendarRecord extends CassandraTable[CalendarRecord, Calendar] {
+  object id extends UUIDColumn(this) with PartitionKey[UUID]
+  object title extends StringColumn(this)
+  object acl extends MapColumn[CalendarRecord, Calendar, String, Int](this)
 
-  def fromCassandra(session: Session, id: UUID):Future[Calendar] = {
-    session.executeAsync("SELECT * FROM calendars WHERE id = ?;", id).asScala.map(rs => fromRow(rs.one()))
-  }
-
-  def fromRow(row: Row): Calendar = {
-    new Calendar(row.getUUID("id"), row.getString("name"))
-  }
+  def fromRow(r: Row): Calendar = Calendar(id(r), title(r), acl(r))
 }
-
-case class Calendar(id: UUID, name: String) extends JsonConvertible with CassandraConvertible {
-  override def toJson = {
-    JSONObject(Map("id" -> id.toString, "name" -> name))
-  }
-
-  override def insertStatement(session: Session):BoundStatement = {
-    session.prepare("INSERT INTO calendars (id, name) VALUES (?, ?);").bind(id, name)
-  }
-
-  override def deleteStatement(session: Session):BoundStatement = {
-    session.prepare("DELETE FROM calendars WHERE id = ?;").bind(id)
-  }
-}
-

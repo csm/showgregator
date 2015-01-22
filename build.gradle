@@ -30,3 +30,19 @@ dependencies {
     testCompile "junit:junit:4.11"
 }
 */
+
+subprojects {
+    apply plugin: 'scala'
+    group = 'org.showgregator'
+    version = '0.0.1'
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+project(':showgregator-service') {
+    dependencies {
+        compile project(':showgregator-core')
+    }
+}

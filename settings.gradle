@@ -17,5 +17,5 @@ include 'services:webservice'
 */
 
 rootProject.name = 'showgregator'
-include 'showgregator-daemon', 'showgregator-service', 'showgregator-web'
+include 'showgregator-core', 'showgregator-daemon', 'showgregator-service', 'showgregator-web'
 

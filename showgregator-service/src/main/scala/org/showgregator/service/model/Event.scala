@@ -1,29 +1,30 @@
 package org.showgregator.service.model
 
 import java.util.UUID
-import com.datastax.driver.core.Session
+import com.datastax.driver.core.Row
 import org.joda.time.DateTime
 
-import scala.concurrent.Future
-import scala.util.Success
-import scala.util.parsing.json.JSONObject
+import com.websudos.phantom.CassandraTable
+import com.websudos.phantom.Implicits.{StringColumn, UUIDColumn}
+import com.websudos.phantom.keys.{Descending, ClusteringOrder, PartitionKey}
+import com.websudos.phantom.column.{MapColumn, DateTimeColumn}
 
-case class Event(calendarId: UUID, id: UUID, when: DateTime, title: String, venueId: UUID) extends JsonConvertible {
-  @volatile private var _calendar:Option[Calendar] = None
+case class Event(id: UUID,
+                 when: DateTime,
+                 title: String,
+                 venueId: UUID,
+                 link: String,
+                 info: String,
+                 acl: Map[String, Int])
 
-  override def toJson: JSONObject = JSONObject(Map(
-    "calendar" -> calendarId.toString,
-    "id" -> id.toString,
-    "when" -> when.toString("YYYY-MM-dd HH:mm:ssZZZ"),
-    "title" -> title,
-    "venue" -> venueId.toString
-  ))
+sealed class EventRecord extends CassandraTable[EventRecord, Event] {
+  object id extends UUIDColumn(this) with PartitionKey[UUID]
+  object when extends DateTimeColumn(this) with ClusteringOrder[DateTime] with Descending
+  object title extends StringColumn(this)
+  object venueId extends UUIDColumn(this)
+  object link extends StringColumn(this)
+  object info extends StringColumn(this)
+  object acl extends MapColumn[EventRecord, Event, String, Int](this)
 
-  def calendar()(implicit session: Session):Future[Calendar] = {
-    if (_calendar.isEmpty) {
-      Calendar.fromCassandra(session, calendarId).andThen({
-        case Success(c) => _calendar = Some(c)
-      })
-    } else Future.successful(_calendar.get)
-  }
+  def fromRow(r: Row): Event = Event(id(r), when(r), title(r), venueId(r), link(r), info(r), acl(r))
 }

@@ -13,4 +13,7 @@ dependencies {
     compile 'com.twitter:finagle-http_2.10:6.24.0'
     compile 'com.datastax.cassandra:cassandra-driver-core:2.1.4'
     compile 'joda-time:joda-time:2.6'
+    compile 'com.websudos:phantom-dsl_2.10:1.5.0'
+    compile 'com.websudos:phantom-udt_2.10:1.5.0'
+    //compile 'org.showgregator:showgregator-core:latest.release'
 }
