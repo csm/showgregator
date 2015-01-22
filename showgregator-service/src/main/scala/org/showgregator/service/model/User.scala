@@ -8,6 +8,8 @@ import com.datastax.driver.core.Row
 import java.nio.ByteBuffer
 
 import org.showgregator.core.ByteBuffers.AsByteArray
+import scala.concurrent.Future
+import com.websudos.phantom.Implicits._
 
 case class User(email: String, handle: String, hashedPassword: HashedPassword)
 
@@ -20,4 +22,10 @@ sealed class UserRecord extends CassandraTable[UserRecord, User] {
   object hash extends BlobColumn(this)
 
   def fromRow(r: Row): User = User(email(r), handle(r), HashedPassword(alg(r), salt(r).asBytes, iterations(r), hash(r).asBytes))
+}
+
+object UserRecord extends UserRecord with Connector {
+  def getByEmail(email: String): Future[Option[User]] = {
+    select.where(_.email eqs email).one()
+  }
 }

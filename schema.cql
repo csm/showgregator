@@ -21,7 +21,7 @@ CREATE TABLE events_in_calendar (
     event uuid,
     when timestamp,
     title text,
-    PRIMARY KEY (calendar, event, when)
+    PRIMARY KEY ((calendar, event), when)
 ) WITH CLUSTERING ORDER BY (when DESC);
 
 CREATE TYPE address (

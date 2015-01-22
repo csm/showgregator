@@ -8,6 +8,14 @@ import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits.{StringColumn, UUIDColumn}
 import com.websudos.phantom.keys.PartitionKey
 import com.websudos.phantom.column.MapColumn
+import com.websudos.phantom.Implicits._
+import scala.concurrent.Future
+
+object CalendarRecord extends CalendarRecord with Connector {
+  def getById(id: UUID): Future[Option[Calendar]] = {
+    select.where(_.id eqs id).one()
+  }
+}
 
 case class Calendar(id: UUID, title: String, acl: Map[String, Int])
 

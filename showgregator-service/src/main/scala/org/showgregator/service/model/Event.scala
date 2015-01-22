@@ -8,6 +8,8 @@ import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits.{StringColumn, UUIDColumn}
 import com.websudos.phantom.keys.{Descending, ClusteringOrder, PartitionKey}
 import com.websudos.phantom.column.{MapColumn, DateTimeColumn}
+import scala.concurrent.Future
+import com.websudos.phantom.Implicits._
 
 case class Event(id: UUID,
                  when: DateTime,
@@ -27,4 +29,10 @@ sealed class EventRecord extends CassandraTable[EventRecord, Event] {
   object acl extends MapColumn[EventRecord, Event, String, Int](this)
 
   def fromRow(r: Row): Event = Event(id(r), when(r), title(r), venueId(r), link(r), info(r), acl(r))
+}
+
+object EventRecord extends EventRecord with Connector {
+  def getById(id: UUID): Future[Option[Event]] = {
+    select.where(_.id eqs id).one()
+  }
 }
