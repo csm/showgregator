@@ -34,7 +34,7 @@ sealed class EventRecord extends CassandraTable[EventRecord, Event] {
 object EventRecord extends EventRecord with Connector {
   override val tableName = "events"
 
-  def getById(id: UUID): Future[Option[Event]] = {
+  def getById(id: UUID)(implicit session:Session): Future[Option[Event]] = {
     select.where(_.id eqs id).one()
   }
 
@@ -50,7 +50,7 @@ object EventRecord extends EventRecord with Connector {
    * @param ttl
    * @return
    */
-  def insertEvent(event: Event, ttl: Period = Period.days(60)):Future[Option[ResultSet]] = {
+  def insertEvent(event: Event, ttl: Period = Period.days(60))(implicit session:Session): Future[Option[ResultSet]] = {
     val ttlSeconds = new Period(DateTime.now(), event.when.plus(ttl)).toStandardSeconds.getSeconds
     if (ttlSeconds > 0) {
       insert.value(_.id, event.id)
@@ -62,7 +62,7 @@ object EventRecord extends EventRecord with Connector {
         .value(_.acl, event.acl)
         .ttl(ttlSeconds)
         .future()
-        .map(Some)
+        .map(rs => Some(rs))
     } else {
       Future.successful(None)
     }

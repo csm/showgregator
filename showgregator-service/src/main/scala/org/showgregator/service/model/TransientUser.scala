@@ -10,7 +10,7 @@ case class TransientUser(email: String,
                          id: UUID)
 
 object TransientUser {
-  def insertUser(user: TransientUser): Future[(ResultSet, ResultSet)] = {
+  def insertUser(user: TransientUser)(implicit session:Session): Future[(ResultSet, ResultSet)] = {
     TransientUserRecord.insertUser(user).zip(ReverseTransientUserRecord.insertUser(user))
   }
 }
@@ -32,11 +32,11 @@ sealed class ReverseTransientUserRecord extends CassandraTable[ReverseTransientU
 object TransientUserRecord extends TransientUserRecord with Connector {
   override val tableName = "transient_users"
 
-  def forEmail(email: String): Future[Option[TransientUser]] = {
+  def forEmail(email: String)(implicit session:Session): Future[Option[TransientUser]] = {
     select.where(_.email eqs email).one()
   }
 
-  private[TransientUser] def insertUser(user: TransientUser): Future[ResultSet] = {
+  def insertUser(user: TransientUser)(implicit session:Session): Future[ResultSet] = {
     insert.value(_.email, user.email)
       .value(_.id, user.id)
       .future()
@@ -46,11 +46,11 @@ object TransientUserRecord extends TransientUserRecord with Connector {
 object ReverseTransientUserRecord extends ReverseTransientUserRecord with Connector {
   override val tableName = "reverse_transient_users"
 
-  def forUuid(id: UUID): Future[Option[TransientUser]] = {
+  def forUuid(id: UUID)(implicit session:Session): Future[Option[TransientUser]] = {
     select.where(_.id eqs id).one()
   }
 
-  private[TransientUser] def insertUser(user: TransientUser): Future[ResultSet] = {
+    def insertUser(user: TransientUser)(implicit session:Session): Future[ResultSet] = {
     insert.value(_.email, user.email)
       .value(_.id, user.id)
       .future()

@@ -5,6 +5,35 @@ mainClassName = 'org.showgregator.service.ShowgregatorService'
 
 repositories {
     mavenCentral()
+    maven {
+        url 'http://maven.twttr.com/'
+    }
+    maven {
+        url 'http://repo.typesafe.com/typesafe/snapshots/'
+    }
+    maven {
+        url 'http://repo.typesafe.com/typesafe/releases/'
+    }
+    maven {
+        url 'https://oss.sonatype.org/content/groups/scala-tools/'
+    }
+    maven {
+        url 'https://oss.sonatype.org/content/repositories/releases'
+    }
+    maven {
+        url 'https://oss.sonatype.org/content/repositories/snapshots'
+    }
+    maven {
+        url 'http://oss.sonatype.org/content/repositories/staging'
+    }
+    maven {
+        url 'http://download.java.net/maven/2/'
+    }
+}
+
+configurations {
+    all*.exclude group: 'com.twitter', module: 'finagle-zookeeper_2.10'
+    all*.exclude group: 'org.cassandraunit', module: 'cassandra-unit', version: '2.0.2.4'
 }
 
 dependencies {
@@ -14,6 +43,23 @@ dependencies {
     compile 'com.datastax.cassandra:cassandra-driver-core:2.1.4'
     compile 'joda-time:joda-time:2.6'
     compile 'com.websudos:phantom-dsl_2.10:1.5.0'
-    compile 'com.websudos:phantom-udt_2.10:1.5.0'
+    compile 'com.websudos:phantom-zookeeper_2.10:1.5.0'
+    compile 'com.twitter:finagle-serversets_2.10:6.24.0'
+    //compile 'com.websudos:phantom-udt_2.10:1.5.0'
     //compile 'org.showgregator:showgregator-core:latest.release'
+
+    testCompile 'com.websudos:phantom-testing_2.10:1.5.0'
+    testCompile 'org.cassandraunit:cassandra-unit:2.0.2.2'
+    testCompile 'junit:junit:4.12'
 }
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "com.github.maiflai:gradle-scalatest:0.6-5-g9065d91"
+    }
+}
+
+apply plugin: "com.github.maiflai.scalatest"

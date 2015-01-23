@@ -36,11 +36,11 @@ sealed class VenueRecord extends CassandraTable[VenueRecord, Venue] {
 object VenueRecord extends VenueRecord with Connector {
   override val tableName = "venues"
 
-  def getById(id: UUID): Future[Option[Venue]] = {
+  def getById(id: UUID)(implicit session:Session): Future[Option[Venue]] = {
     select.where(_.id eqs id).one()
   }
 
-  def insertVenue(venue: Venue): Future[ResultSet] = {
+  def insertVenue(venue: Venue)(implicit session:Session): Future[ResultSet] = {
     insert.value(_.id, venue.id)
       .value(_.name, venue.name)
       .value(_.longitude, venue.longitude)

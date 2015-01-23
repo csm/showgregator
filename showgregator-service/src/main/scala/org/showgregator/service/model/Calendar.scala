@@ -7,18 +7,18 @@ import com.websudos.phantom.Implicits._
 import scala.concurrent.Future
 
 object CalendarRecord extends CalendarRecord with Connector {
-  def getById(id: UUID): Future[Option[Calendar]] = {
+  def getById(id: UUID)(implicit session:Session): Future[Option[Calendar]] = {
     select.where(_.id eqs id).one()
   }
 
-  def insertCalendar(calendar:Calendar):Future[ResultSet] = {
+  def insertCalendar(calendar:Calendar)(implicit session:Session):Future[ResultSet] = {
     insert.value(_.id, calendar.id)
       .value(_.title, calendar.title)
       .value(_.acl, calendar.acl)
       .future()
   }
 
-  def deleteCalendar(id: UUID): Future[ResultSet] = {
+  def deleteCalendar(id: UUID)(implicit session:Session): Future[ResultSet] = {
     delete.where(_.id eqs id).future()
   }
 }

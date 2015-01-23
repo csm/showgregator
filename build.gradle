@@ -46,3 +46,4 @@ project(':showgregator-service') {
         compile project(':showgregator-core')
     }
 }
+

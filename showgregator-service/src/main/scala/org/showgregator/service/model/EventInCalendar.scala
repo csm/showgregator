@@ -10,11 +10,11 @@ import scala.concurrent.Future
 import com.websudos.phantom.Implicits._
 
 case class EventInCalendar(calendar: UUID, event: UUID, when: DateTime, title: String) {
-  def getCalendar: Future[Option[Calendar]] = {
+  def getCalendar(implicit session:Session): Future[Option[Calendar]] = {
     CalendarRecord.getById(calendar)
   }
 
-  def getEvent: Future[Option[Event]] = {
+  def getEvent(implicit session:Session): Future[Option[Event]] = {
     EventRecord.getById(event)
   }
 }
@@ -31,7 +31,7 @@ sealed class EventInCalendarRecord extends CassandraTable[EventInCalendarRecord,
 object EventInCalendarRecord extends EventInCalendarRecord with Connector {
   override val tableName = "events_in_calendar"
 
-  def fetchForCalendar(calendarId: UUID, fromDate: DateTime, toDate: DateTime = DateTime.now(DateTimeZone.UTC)): Future[Seq[EventInCalendar]] = {
+  def fetchForCalendar(calendarId: UUID, fromDate: DateTime, toDate: DateTime = DateTime.now(DateTimeZone.UTC))(implicit session:Session): Future[Seq[EventInCalendar]] = {
     select.where(_.calendar eqs calendarId)
       .and(_.when gte fromDate)
       .and(_.when lte toDate)
