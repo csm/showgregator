@@ -2,7 +2,7 @@ package org.showgregator.service.model
 
 import java.util.UUID
 import com.datastax.driver.core.Row
-import org.joda.time.DateTime
+import org.joda.time.{Period, DateTime}
 
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits.{StringColumn, UUIDColumn}
@@ -15,7 +15,7 @@ case class Event(id: UUID,
                  when: DateTime,
                  title: String,
                  venueId: UUID,
-                 link: String,
+                 link: Option[String],
                  info: String,
                  acl: Map[String, Int])
 
@@ -24,7 +24,7 @@ sealed class EventRecord extends CassandraTable[EventRecord, Event] {
   object when extends DateTimeColumn(this) with ClusteringOrder[DateTime] with Descending
   object title extends StringColumn(this)
   object venueId extends UUIDColumn(this)
-  object link extends StringColumn(this)
+  object link extends OptionalStringColumn(this)
   object info extends StringColumn(this)
   object acl extends MapColumn[EventRecord, Event, String, Int](this)
 
@@ -32,7 +32,39 @@ sealed class EventRecord extends CassandraTable[EventRecord, Event] {
 }
 
 object EventRecord extends EventRecord with Connector {
+  override val tableName = "events"
+
   def getById(id: UUID): Future[Option[Event]] = {
     select.where(_.id eqs id).one()
+  }
+
+  /**
+   * Insert an event into the database. The TTL is how long the event will stick
+   * around AFTER the date of the event.
+   *
+   * If this event exists in the past, and the TTL is not long enough such that
+   * the event date plus the TTL is before the current date, then the event is not
+   * inserted.
+   *
+   * @param event
+   * @param ttl
+   * @return
+   */
+  def insertEvent(event: Event, ttl: Period = Period.days(60)):Future[Option[ResultSet]] = {
+    val ttlSeconds = new Period(DateTime.now(), event.when.plus(ttl)).toStandardSeconds.getSeconds
+    if (ttlSeconds > 0) {
+      insert.value(_.id, event.id)
+        .value(_.when, event.when)
+        .value(_.title, event.title)
+        .value(_.venueId, event.venueId)
+        .value(_.link, event.link)
+        .value(_.info, event.info)
+        .value(_.acl, event.acl)
+        .ttl(ttlSeconds)
+        .future()
+        .map(Some)
+    } else {
+      Future.successful(None)
+    }
   }
 }

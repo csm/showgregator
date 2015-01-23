@@ -2,11 +2,12 @@ package org.showgregator.service.model
 
 import java.util.UUID
 
-import scala.util.parsing.json.JSONObject
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits.{OptionalStringColumn, DoubleColumn, StringColumn, UUIDColumn}
 import com.websudos.phantom.keys.PartitionKey
 import com.datastax.driver.core.Row
+import scala.concurrent.Future
+import com.websudos.phantom.Implicits._
 
 case class Venue(id: UUID,
                  name: String,
@@ -30,4 +31,25 @@ sealed class VenueRecord extends CassandraTable[VenueRecord, Venue] {
   object country extends StringColumn(this)
 
   def fromRow(r: Row): Venue = Venue(id(r), name(r), longitude(r), latitude(r), street(r), street2(r), city(r), state(r), country(r))
+}
+
+object VenueRecord extends VenueRecord with Connector {
+  override val tableName = "venues"
+
+  def getById(id: UUID): Future[Option[Venue]] = {
+    select.where(_.id eqs id).one()
+  }
+
+  def insertVenue(venue: Venue): Future[ResultSet] = {
+    insert.value(_.id, venue.id)
+      .value(_.name, venue.name)
+      .value(_.longitude, venue.longitude)
+      .value(_.latitude, venue.latitude)
+      .value(_.street, venue.street)
+      .value(_.street2, venue.street2)
+      .value(_.city, venue.city)
+      .value(_.state, venue.state)
+      .value(_.country, venue.country)
+      .future()
+  }
 }

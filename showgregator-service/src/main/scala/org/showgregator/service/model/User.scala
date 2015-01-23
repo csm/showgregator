@@ -25,7 +25,19 @@ sealed class UserRecord extends CassandraTable[UserRecord, User] {
 }
 
 object UserRecord extends UserRecord with Connector {
+  override val tableName = "users"
+
   def getByEmail(email: String): Future[Option[User]] = {
     select.where(_.email eqs email).one()
+  }
+
+  def insertUser(user: User): Future[ResultSet] = {
+    insert.value(_.email, user.email)
+      .value(_.handle, user.handle)
+      .value(_.alg, user.hashedPassword.alg)
+      .value(_.salt, user.hashedPassword.salt)
+      .value(_.iterations, user.hashedPassword.iterations)
+      .value(_.hash, user.hashedPassword.hash)
+      .future()
   }
 }
