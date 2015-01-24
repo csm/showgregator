@@ -55,10 +55,26 @@ dependencies {
     testCompile 'junit:junit:4.12'
 }
 
-apply from: "buildSrc/main/groovy/us/hexcoder/gradle/twirl/plugin/TwirlExtension.groovy"
-apply from: "buildSrc/main/groovy/us/hexcoder/gradle/twirl/plugin/TwirlPlugin.groovy"
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath gradleApi()
+        classpath localGroovy()
+
+        classpath "org.scala-lang:scala-library:2.10.4"
+        classpath "com.typesafe.play:twirl-compiler_2.10:1.0.4"
+        classpath "com.typesafe.play:twirl-api_2.10:1.0.4"
+        classpath "org.apache.maven:maven-ant-tasks:2.1.3"
+    }
+}
+
 apply from: "buildSrc/main/groovy/us/hexcoder/gradle/twirl/task/AbstractCompileTask.groovy"
 apply from: "buildSrc/main/groovy/us/hexcoder/gradle/twirl/task/TwirlCompileTask.groovy"
 apply from: "buildSrc/main/groovy/us/hexcoder/gradle/twirl/task/TwirlCompileTestTask.groovy"
+apply from: "buildSrc/main/groovy/us/hexcoder/gradle/twirl/plugin/TwirlExtension.groovy"
+apply from: "buildSrc/main/groovy/us/hexcoder/gradle/twirl/plugin/TwirlPlugin.groovy"
 
 apply plugin: "twirl"

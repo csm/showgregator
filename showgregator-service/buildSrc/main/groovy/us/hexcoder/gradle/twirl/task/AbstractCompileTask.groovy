@@ -1,4 +1,4 @@
-package us.hexcoder.gradle.twirl.task
+//package us.hexcoder.gradle.twirl.task
 import org.apache.maven.artifact.ant.shaded.DirectoryScanner
 import org.gradle.api.DefaultTask
 import play.twirl.api.HtmlFormat

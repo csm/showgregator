@@ -1,10 +1,10 @@
-package us.hexcoder.gradle.twirl.plugin
+//package us.hexcoder.gradle.twirl.plugin
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.plugins.scala.ScalaPlugin
-import us.hexcoder.gradle.twirl.task.TwirlCompileTask
-import us.hexcoder.gradle.twirl.task.TwirlCompileTestTask
+//import us.hexcoder.gradle.twirl.task.TwirlCompileTask
+//import us.hexcoder.gradle.twirl.task.TwirlCompileTestTask
 /**
  * @author 67726e
  */
