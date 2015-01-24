@@ -1,9 +1,7 @@
 package org.showgregator.service.model
 
-import java.util.UUID
-import org.joda.time.{DateTimeZone, DateTime}
+import org.joda.time._
 import com.websudos.phantom.CassandraTable
-import com.websudos.phantom.Implicits.{StringColumn, UUIDColumn}
 import com.websudos.phantom.keys.{Descending => KeysDescending, ClusteringOrder, PartitionKey}
 import com.websudos.phantom.column.DateTimeColumn
 import scala.concurrent.Future
@@ -36,5 +34,18 @@ object EventInCalendarRecord extends EventInCalendarRecord with Connector {
       .and(_.when gte fromDate)
       .and(_.when lte toDate)
       .fetch()
+  }
+
+  def insertEvent(event: EventInCalendar, ttl: Duration = Days.days(60).toStandardDuration): Future[Option[ResultSet]] = {
+    val eventTtl = new Duration(DateTime.now(), event.when.plus(ttl)).toStandardSeconds.getSeconds
+    if (eventTtl > 0) {
+      insert.value(_.calendar, event.calendar)
+        .value(_.event, event.event)
+        .value(_.when, event.when)
+        .value(_.title, event.title)
+        .ttl(eventTtl)
+        .future()
+        .map(Some(_))
+    } else Future.successful(None)
   }
 }

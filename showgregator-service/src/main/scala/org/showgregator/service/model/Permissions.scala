@@ -5,4 +5,6 @@ object Permissions {
   val Write   = 1 << 1
   val Delete  = 1 << 2
   val Comment = 1 << 3
+
+
 }

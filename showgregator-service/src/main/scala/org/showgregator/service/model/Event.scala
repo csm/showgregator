@@ -2,7 +2,7 @@ package org.showgregator.service.model
 
 import java.util.UUID
 import com.datastax.driver.core.Row
-import org.joda.time.{Period, DateTime}
+import org.joda.time.{Duration, Period, DateTime}
 
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits.{StringColumn, UUIDColumn}
@@ -51,7 +51,7 @@ object EventRecord extends EventRecord with Connector {
    * @return
    */
   def insertEvent(event: Event, ttl: Period = Period.days(60))(implicit session:Session): Future[Option[ResultSet]] = {
-    val ttlSeconds = new Period(DateTime.now(), event.when.plus(ttl)).toStandardSeconds.getSeconds
+    val ttlSeconds = new Duration(DateTime.now(), event.when.plus(ttl)).toStandardSeconds.getSeconds
     if (ttlSeconds > 0) {
       insert.value(_.id, event.id)
         .value(_.when, event.when)
