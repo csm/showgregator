@@ -45,6 +45,8 @@ dependencies {
     compile 'com.websudos:phantom-dsl_2.10:1.5.0'
     compile 'com.websudos:phantom-zookeeper_2.10:1.5.0'
     compile 'com.twitter:finagle-serversets_2.10:6.24.0'
+    compile 'com.typesafe.play:twirl-api_2.10:1.0.4'
+    compile 'com.typesafe.play:twirl-compiler_2.10:1.0.4'
     //compile 'com.websudos:phantom-udt_2.10:1.5.0'
     //compile 'org.showgregator:showgregator-core:latest.release'
 
@@ -53,13 +55,10 @@ dependencies {
     testCompile 'junit:junit:4.12'
 }
 
-buildscript {
-    repositories {
-        jcenter()
-    }
-    dependencies {
-        classpath "com.github.maiflai:gradle-scalatest:0.6-5-g9065d91"
-    }
-}
+apply from: "buildSrc/main/groovy/us/hexcoder/gradle/twirl/plugin/TwirlExtension.groovy"
+apply from: "buildSrc/main/groovy/us/hexcoder/gradle/twirl/plugin/TwirlPlugin.groovy"
+apply from: "buildSrc/main/groovy/us/hexcoder/gradle/twirl/task/AbstractCompileTask.groovy"
+apply from: "buildSrc/main/groovy/us/hexcoder/gradle/twirl/task/TwirlCompileTask.groovy"
+apply from: "buildSrc/main/groovy/us/hexcoder/gradle/twirl/task/TwirlCompileTestTask.groovy"
 
-apply plugin: "com.github.maiflai.scalatest"
+apply plugin: "twirl"
