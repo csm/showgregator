@@ -31,6 +31,8 @@ dependencies {
 }
 */
 
+apply plugin: 'idea'
+
 subprojects {
     apply plugin: 'scala'
     group = 'org.showgregator'

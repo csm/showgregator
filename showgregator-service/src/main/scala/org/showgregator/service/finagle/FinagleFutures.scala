@@ -1,6 +1,6 @@
 package org.showgregator.service.finagle
 
-import scala.concurrent.{Future => ScalaFuture}
+import scala.concurrent.{Future => ScalaFuture, ExecutionContext}
 import com.twitter.util.{Promise, Future}
 import scala.util.{Failure, Success}
 
@@ -12,8 +12,8 @@ import scala.util.{Failure, Success}
  * To change this template use File | Settings | File Templates.
  */
 object FinagleFutures {
-  implicit class ScalaFutureWrapper[A](future: ScalaFuture[A]) {
-    def asTwitter: Future[A] = {
+  implicit class ScalaFutureWrapper[A](future: ScalaFuture[A])(implicit context: ExecutionContext) {
+    def asFinagle: Future[A] = {
       val promise = Promise[A]()
       future.andThen {
         case Success(a) => promise.setValue(a)

@@ -50,7 +50,7 @@ object ReverseTransientUserRecord extends ReverseTransientUserRecord with Connec
     select.where(_.id eqs id).one()
   }
 
-    def insertUser(user: TransientUser)(implicit session:Session): Future[ResultSet] = {
+  def insertUser(user: TransientUser)(implicit session:Session): Future[ResultSet] = {
     insert.value(_.email, user.email)
       .value(_.id, user.id)
       .future()

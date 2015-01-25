@@ -1,0 +1,29 @@
+body {
+    color: black;
+    background-color: white;
+    font-family: "Helvetica Neue", Helvetica, sans;
+}
+
+div.main {
+    margin-left: 15%;
+    margin-right: 15%;
+    margin-top: 5%;
+}
+
+div.main div.title {
+    font-family: "Helvetica Neue", Helvetica, sans;
+    font-weight: bold;
+    font-size: 64pt;
+    border-bottom: 5pt solid black;
+    line-height: 75%;
+}
+
+div.main div.content {
+    margin-top: 30pt;
+    margin-bottom: 30pt;
+}
+
+a {
+    color: black;
+    text-decoration: underline;
+}
