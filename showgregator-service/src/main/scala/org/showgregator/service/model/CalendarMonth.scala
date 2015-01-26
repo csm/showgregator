@@ -12,10 +12,14 @@ class CalendarMonth(year: Int, month: Int) {
   val firstDayOfWeek = startOfMonth.dayOfWeek().get()
   val endDayOfWeek = endOfMonth.dayOfWeek().get()
 
-  val padBefore = Range(DateTimeConstants.MONDAY, firstDayOfWeek).map {
-    day => startOfMonth.minusDays(firstDayOfWeek - day)
-  }.toList
-  val padAfter = Range(endDayOfWeek, DateTimeConstants.SUNDAY).reverse.map {
-    day => endOfMonth.plusDays(DateTimeConstants.SUNDAY - day)
+  val allDays = {
+    val padBefore = Range(DateTimeConstants.MONDAY, firstDayOfWeek).map {
+      day => startOfMonth.minusDays(firstDayOfWeek - day)
+    }.toList
+    val padAfter = Range(endDayOfWeek, DateTimeConstants.SUNDAY).reverse.map {
+      day => endOfMonth.plusDays(DateTimeConstants.SUNDAY - day)
+    }
+    val days = Stream.from(0).map(i => startOfMonth.plusDays(i)).takeWhile(d => !d.isAfter(endOfMonth))
+    (padBefore ++ days ++ padAfter).grouped(7).toList
   }
 }
