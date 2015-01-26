@@ -1,7 +1,7 @@
 package org.showgregator.service.controller
 
 import com.twitter.finatra.Controller
-import org.showgregator.service.view.{NotFoundView, ServerErrorView}
+import org.showgregator.service.view.{BadRequestView, NotFoundView, ServerErrorView}
 import java.io.{PrintWriter, StringWriter}
 
 
@@ -12,6 +12,10 @@ class ControllerBase extends Controller {
 
   error { request =>
     request.error match {
+      case Some(iae:IllegalArgumentException) => {
+        render.view(new BadRequestView()).status(400).toFuture
+      }
+
       case Some(t:Throwable) => {
         // TODO don't print the stack in non dev mode
         val sWriter = new StringWriter()

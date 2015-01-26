@@ -38,7 +38,18 @@ object InitTables extends App {
     venues <- VenueRecord.create.future()
     registerTokens <- RegisterTokenRecord.create.future()
     pendingUsers <- PendingUserRecord.create.future()
-  } yield (calendars, events, eventComments, eventsInCalendar, transientUsers, reverseTransientUsers, users, venues, registerTokens, pendingUsers)
+    reversePendingUsers <- ReversePendingUserRecord.create.future()
+  } yield (calendars,
+      events,
+      eventComments,
+      eventsInCalendar,
+      transientUsers,
+      reverseTransientUsers,
+      users,
+      venues,
+      registerTokens,
+      pendingUsers,
+      reversePendingUsers)
   println(Await.result(f, 1.minute))
   System.exit(0)
 }

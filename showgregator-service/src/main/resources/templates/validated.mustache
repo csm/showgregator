@@ -1,20 +1,21 @@
 <html>
     <head>
-        <title>LOG IN to SHOWGREGATOR</title>
+        <title>VALIDATED</title>
         <link rel="stylesheet" href="/css/main.css">
         <link rel="stylesheet" href="/css/login.css">
     </head>
     <body>
         <div class="main">
-            <div class="title">LOGIN</div>
+            <div class="title">VALIDATED.</div>
             <div class="content">
+                <div>You've successfully validated your email address. Now, log in to continue.</div>
                 <form action="/login" method="POST" id="login">
                     <p>
                         <span class="label">
                             <label for="email">Email</label>
                         </span>
                         <span>
-                            <input type="email" name="email" id="email" placeholder="you@domain.com" size="40">
+                            <input type="email" name="email" id="email" placeholder="you@domain.com" size="40" value="{{ email }}">
                         </span>
                     </p>
                     <p>

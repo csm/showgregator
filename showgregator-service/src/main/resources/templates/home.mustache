@@ -1,0 +1,25 @@
+<html>
+    <head>
+        <title>{{ handle }}</title>
+        <link rel="stylesheet" href="/css/main.css">
+    </head>
+    <body>
+        <div class="main">
+            <div class="title">
+                {{ handle }}
+                <span id="logout"><a href="/logout">Logout</a></span>
+            </div>
+            <div class="content">
+                <p><img src="http://www.gravatar.com/avatar/{{ gravatarHash }}?s=200"></p>
+
+                <p>Hi, {{ handle }}.</p>
+
+                <p>There isn't much here yet. Soon we will let you see your calendars, your friends, your mailbox, stuff you can edit, etc.</p>
+            </div>
+            <div class="footer">
+                Copyright &copy; 2015 Casey Marshall<br>
+                Fork us so hard on <a href="https://github.com/csm/showgregator">github</a>.
+            </div>
+        </div>
+    </body>
+</html>

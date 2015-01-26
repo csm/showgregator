@@ -6,7 +6,7 @@ import com.websudos.phantom.Implicits._
 import com.websudos.phantom.keys.PartitionKey
 import com.datastax.driver.core.Row
 import org.showgregator.core.ByteBuffers.AsByteArray
-import org.joda.time.{Days, Duration}
+import org.joda.time.Duration
 import scala.concurrent.Future
 import java.nio.ByteBuffer
 
@@ -61,6 +61,39 @@ object PendingUserRecord extends PendingUserRecord with Connector {
         case true => PendingUserRecord.delete.where(_.id eqs id).future().map(_ => true)
         case false => Future.successful(false)
       }
-    } yield deletion
+      reverseDeletion <- deletion match {
+        case true => ReversePendingUserRecord.delete.where(_.id eqs user.get.email.toLowerCase).future().map(_ => true)
+        case false => Future.successful(false)
+      }
+    } yield deletion && reverseDeletion
+  }
+}
+
+case class ReversePendingUser(email: String, token: UUID) {
+  def getUser(implicit session: Session):Future[Option[PendingUser]] = {
+    PendingUserRecord.getPendingUser(token)
+  }
+}
+
+sealed class ReversePendingUserRecord extends CassandraTable[ReversePendingUserRecord, ReversePendingUser] {
+  object id extends StringColumn(this) with PartitionKey[String]
+  object tokenId extends UUIDColumn(this)
+  object email extends StringColumn(this)
+
+  def fromRow(r: Row): ReversePendingUser = ReversePendingUser(email(r), tokenId(r))
+}
+
+object ReversePendingUserRecord extends ReversePendingUserRecord with Connector {
+  override val tableName = "reverse_pending_users"
+
+  def insertUser(user: PendingUser)(implicit session: Session): Future[ResultSet] = {
+    insert.value(_.id, user.email.toLowerCase)
+      .value(_.tokenId, user.id)
+      .value(_.email, user.email)
+      .future()
+  }
+
+  def getByEmail(email: String)(implicit session: Session): Future[Option[ReversePendingUser]] = {
+    select.where(_.id eqs email.toLowerCase).one()
   }
 }

@@ -13,7 +13,7 @@ import com.twitter.util.Future
  */
 class RootController extends ControllerBase {
   get("/") { request =>
-    render.static("/html/placeholder.html")
+    render.static("/html/main.html")
       .contentType("text/html")
       .toFuture
   }

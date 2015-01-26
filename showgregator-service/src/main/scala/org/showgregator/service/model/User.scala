@@ -11,7 +11,9 @@ import org.showgregator.core.ByteBuffers.AsByteArray
 import scala.concurrent.Future
 import com.websudos.phantom.Implicits._
 
-case class User(email: String, handle: Option[String], hashedPassword: HashedPassword)
+abstract class BaseUser(val email:String)
+
+case class User(_email: String, handle: Option[String], hashedPassword: HashedPassword) extends BaseUser(_email)
 
 sealed class UserRecord extends CassandraTable[UserRecord, User] {
   // the id field will be the email address, downcased.

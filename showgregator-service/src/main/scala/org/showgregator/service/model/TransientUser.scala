@@ -6,8 +6,9 @@ import com.websudos.phantom.keys.PartitionKey
 import com.datastax.driver.core.Row
 import scala.concurrent.Future
 
-case class TransientUser(email: String,
+case class TransientUser(_email: String,
                          id: UUID)
+  extends BaseUser(_email)
 
 object TransientUser {
   def insertUser(user: TransientUser)(implicit session:Session): Future[(ResultSet, ResultSet)] = {

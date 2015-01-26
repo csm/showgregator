@@ -8,6 +8,7 @@ div.main {
     margin-left: 15%;
     margin-right: 15%;
     margin-top: 5%;
+    min-height: 100%;
 }
 
 div.main div.title {
@@ -16,6 +17,17 @@ div.main div.title {
     font-size: 64pt;
     border-bottom: 5pt solid black;
     line-height: 75%;
+}
+
+div.main div.title span#logout {
+    float: right;
+    clear: none;
+    font-size: medium;
+}
+
+span#logout a {
+    text-decoration: none;
+    text-transform: uppercase;
 }
 
 div.main div.content {
@@ -41,4 +53,30 @@ span.error {
 
 span.error a {
     color: red;
+}
+
+div.main div.footer {
+    font-size: small;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    color: white;
+    background-color: black;
+    padding-top: 20pt;
+    padding-bottom: 20pt;
+    padding-left: 20%;
+    padding-right: 20%;
+}
+
+div.main div.footer a {
+    color: white;
+}
+
+span.macro a {
+    text-decoration: none;
+}
+
+span.macro a img {
+    border: none;
 }
