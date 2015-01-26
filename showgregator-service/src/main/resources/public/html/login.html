@@ -2,19 +2,34 @@
     <head>
         <title>LOG IN to SHOWGREGATOR</title>
         <link rel="stylesheet" href="/css/main.css">
+        <link rel="stylesheet" href="/css/login.css">
     </head>
     <body>
         <div class="main">
             <div class="title">LOGIN</div>
             <div class="content">
-                <form action="/login" method="POST">
+                <form action="/login" method="POST" id="login">
                     <p>
-                        <label for="email">Email</label>
-                        <input type="text" name="email" id="email">
+                        <span class="label">
+                            <label for="email">Email</label>
+                        </span>
+                        <span>
+                            <input type="email" name="email" id="email" placeholder="you@domain.com" size="40">
+                        </span>
                     </p>
                     <p>
-                        <label for="password">Password</label>
-                        <input type="password" name="password" id="password">
+                        <span class="label">
+                            <label for="password">Password</label>
+                        </span>
+                        <span>
+                            <input type="password" name="password" id="password" size="40" placeholder="password">
+                        </span>
+                    </p>
+                    <p>
+                        <span class="label"></span>
+                        <span>
+                            <span class="button" onclick="document.getElementById('login').submit(); return false;">Login</span>
+                        </span>
                     </p>
                 </form>
             </div>

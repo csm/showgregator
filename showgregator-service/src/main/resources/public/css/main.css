@@ -26,4 +26,19 @@ div.main div.content {
 a {
     color: black;
     text-decoration: underline;
+    font-weight: bold;
+}
+
+span.error {
+    font-weight: bold;
+    font-size: large;
+    color: red;
+    float: right;
+    width: 40%;
+    text-transform: uppercase;
+    clear: none;
+}
+
+span.error a {
+    color: red;
 }

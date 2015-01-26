@@ -9,10 +9,10 @@ case class HashedPassword(alg: String, salt: Array[Byte], iterations: Int, hash:
 object PasswordHashing {
   val Random = new SecureRandom()
 
-  def hashPassword(password: Array[Char], iterations: Int = 102400,
-                   salt: Option[Array[Byte]] = None,
-                   alg: String = "PBKDF2WithHmacSHA256",
-                   random: SecureRandom = Random): HashedPassword = {
+  def apply(password: Array[Char], iterations: Int = 102400,
+            salt: Option[Array[Byte]] = None,
+            alg: String = "PBKDF2WithHmacSHA1",
+            random: SecureRandom = Random): HashedPassword = {
     val _salt = salt match {
       case Some(a) => a
       case None => random.generateSeed(8)

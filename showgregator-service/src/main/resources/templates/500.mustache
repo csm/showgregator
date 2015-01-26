@@ -1,0 +1,32 @@
+<html>
+    <head>
+        <title>AH SHIT</title>
+        <link rel="stylesheet" href="/css/main.css">
+        <style>
+            body {
+                color: white;
+                background-color: black;
+            }
+
+            span.fail {
+                font-weight: bold;
+                font-size: large;
+                float: right;
+                width: 40%;
+                text-transform: uppercase;
+                clear: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="main">
+            <span class="fail">
+                {{{ message }}}
+                <pre>{{ stacktrace }}</pre>
+            </span>
+            <span class="macro">
+                <img src="/images/rage.png">
+            </span>
+        </div>
+    </body>
+</html>

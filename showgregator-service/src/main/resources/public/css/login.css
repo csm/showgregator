@@ -1,0 +1,56 @@
+form#login {
+    display: table;
+    width: 100%;
+}
+
+form#login p {
+    display: table-row;
+}
+
+form#login p span {
+    display: table-cell;
+    width: 62%;
+    padding: 5pt;
+}
+
+form#login p span.label {
+    width: 38%;
+    text-align: right;
+    font-weight: bold;
+}
+
+form#login p span span.button {
+    color: black;
+    font-weight: bold;
+    padding-top: 3pt;
+    padding-bottom: 3pt;
+    text-decoration: none;
+    border: 1pt solid black;
+    border-radius: 3pt;
+    text-align: center;
+    cursor: pointer;
+}
+
+form#login p span input#email {
+    font-family: "Helvetica Neue", Helvetica, sans;
+    font-size: medium;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: 1pt solid black;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+form#login p span input#password {
+    font-family: "Helvetica Neue", Helvetica, sans;
+    font-size: medium;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: 1pt solid black;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}

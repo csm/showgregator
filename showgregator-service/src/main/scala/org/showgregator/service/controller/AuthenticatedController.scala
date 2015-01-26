@@ -19,7 +19,7 @@ import com.websudos.phantom.Implicits.Session
  * Time: 7:56 PM
  * To change this template use File | Settings | File Templates.
  */
-class PhantomConnectedController(implicit val session: Session, val context: ExecutionContext) extends Controller
+class PhantomConnectedController(implicit val session: Session, val context: ExecutionContext) extends ControllerBase
 
 class AuthenticatedController(implicit val sessionStore:SessionStore, override val session: Session, override val context: ExecutionContext) extends PhantomConnectedController {
   def user(request: Request):Future[Option[Either[User, TransientUser]]] = {

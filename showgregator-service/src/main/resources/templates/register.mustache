@@ -1,0 +1,59 @@
+<html>
+    <head>
+        <title>REGISTER for SHOWGREGATOR</title>
+        <link rel="stylesheet" href="/css/main.css">
+        <link rel="stylesheet" href="/css/register.css">
+        <script src="/js/register.js"></script>
+    </head>
+    <body>
+        <div class="main">
+            <div class="title">REGISTER</div>
+            <div class="content">
+                <form action="/register/{{ token }}" method="POST" id="register">
+                    <p>
+                        <span class="label">
+                            <label for="email">Email</label>
+                        </span>
+                        <span>
+                            <input type="email" name="email" id="email" placeholder="you@domain.com" size="50" value="{{ email }}">
+                            <span id="bad_email" class="error"></span>
+                        </span>
+                    </p>
+                    <p>
+                        <span class="label">
+                            <label for="handle">Your Name</label>
+                        </span>
+                        <span>
+                            <input type="text" name="handle" id="handle" placeholder="Optional, doesn't need to be your real name" size="50">
+                            <span></span>
+                        </span>
+                    </p>
+                    <p>
+                        <span class="label">
+                            <label for="password">Password</label>
+                        </span>
+                        <span>
+                            <input type="password" name="password" id="password" size="50" placeholder="password">
+                            <span id="empty_password" class="error"></span>
+                        </span>
+                    </p>
+                    <p>
+                        <span class="label">
+                            <label for="confirm">Confirm Password</label>
+                        </span>
+                        <span>
+                            <input type="password" name="confirm" id="confirm" size="50" placeholder="confirm">
+                            <span id="password_mismatch" class="error"></span>
+                        </span>
+                    </p>
+                    <p>
+                        <span class="label"></span>
+                        <span>
+                            <span class="button" onclick="validate_and_register(); return false;">Register</span>
+                        </span>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </body>
+</html>

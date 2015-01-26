@@ -1,6 +1,8 @@
 package org.showgregator.service.controller
 
 import com.twitter.finatra.Controller
+import java.io.{PrintWriter, StringWriter}
+import com.twitter.util.Future
 
 /**
  * Created with IntelliJ IDEA.
@@ -9,7 +11,7 @@ import com.twitter.finatra.Controller
  * Time: 12:32 PM
  * To change this template use File | Settings | File Templates.
  */
-class RootController extends Controller {
+class RootController extends ControllerBase {
   get("/") { request =>
     render.static("/html/placeholder.html")
       .contentType("text/html")
@@ -21,5 +23,13 @@ class RootController extends Controller {
       .static(s"/css/${request.routeParams.get("stylesheet")}")
       .contentType("text/css")
       .toFuture
+  }
+
+  get("/fail") { request =>
+    try {
+      throw new Exception("guaranteed fail")
+    } catch {
+      case t:Throwable => Future.exception(t)
+    }
   }
 }

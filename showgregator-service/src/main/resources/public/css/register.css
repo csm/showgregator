@@ -1,0 +1,56 @@
+form#register {
+    display: table;
+    width: 100%;
+}
+
+form#register p {
+    display: table-row;
+}
+
+form#register p span {
+    display: table-cell;
+    width: 62%;
+    padding: 5pt;
+}
+
+form#register p span.label {
+    width: 38%;
+    text-align: right;
+    font-weight: bold;
+}
+
+form#register p span span.button {
+    color: black;
+    font-weight: bold;
+    padding-top: 3pt;
+    padding-bottom: 3pt;
+    text-decoration: none;
+    border: 1pt solid black;
+    border-radius: 3pt;
+    text-align: center;
+    cursor: pointer;
+}
+
+form#register p span input#email, form#register p span input#handle {
+    font-family: "Helvetica Neue", Helvetica, sans;
+    font-size: medium;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: 1pt solid black;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+form#register p span input#password, form#register p span input#confirm {
+    font-family: "Helvetica Neue", Helvetica, sans;
+    font-size: medium;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: 1pt solid black;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}

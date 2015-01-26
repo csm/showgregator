@@ -9,4 +9,6 @@ dependencies {
     compile 'joda-time:joda-time:2.6'
 
     testCompile 'junit:junit:4.12'
+    testCompile 'org.scalacheck:scalacheck_2.10:1.12.1'
+    testCompile 'org.scalatest:scalatest_2.10:2.2.1'
 }

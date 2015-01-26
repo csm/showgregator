@@ -11,28 +11,32 @@ import org.showgregator.core.ByteBuffers.AsByteArray
 import scala.concurrent.Future
 import com.websudos.phantom.Implicits._
 
-case class User(email: String, handle: String, hashedPassword: HashedPassword)
+case class User(email: String, handle: Option[String], hashedPassword: HashedPassword)
 
 sealed class UserRecord extends CassandraTable[UserRecord, User] {
-  object email extends StringColumn(this) with PartitionKey[String]
-  object handle extends StringColumn(this)
+  // the id field will be the email address, downcased.
+  object id extends StringColumn(this) with PartitionKey[String]
+  object email extends StringColumn(this)
+  object handle extends OptionalStringColumn(this)
   object alg extends StringColumn(this)
   object salt extends BlobColumn(this)
   object iterations extends IntColumn(this)
   object hash extends BlobColumn(this)
 
-  def fromRow(r: Row): User = User(email(r), handle(r), HashedPassword(alg(r), salt(r).asBytes, iterations(r), hash(r).asBytes))
+  def fromRow(r: Row): User = User(email(r), handle(r),
+    HashedPassword(alg(r), salt(r).asBytes, iterations(r), hash(r).asBytes))
 }
 
 object UserRecord extends UserRecord with Connector {
   override val tableName = "users"
 
   def getByEmail(email: String)(implicit session:Session): Future[Option[User]] = {
-    select.where(_.email eqs email).one()
+    select.where(_.id eqs email.toLowerCase).one()
   }
 
   def insertUser(user: User)(implicit session:Session): Future[ResultSet] = {
-    insert.value(_.email, user.email)
+    insert.value(_.id, user.email.toLowerCase)
+      .value(_.email, user.email)
       .value(_.handle, user.handle)
       .value(_.alg, user.hashedPassword.alg)
       .value(_.salt, ByteBuffer.wrap(user.hashedPassword.salt))
