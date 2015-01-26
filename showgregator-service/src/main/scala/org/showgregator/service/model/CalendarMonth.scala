@@ -7,6 +7,8 @@ class CalendarDay(date: DateTime, month: Int) {
 }
 
 class CalendarMonth(year: Int, month: Int) {
+  require(year > 0)
+  require(month > 0 && month <= 12)
   val startOfMonth = new DateTime(year, month, 1, 0, 0)
   val endOfMonth = startOfMonth.dayOfMonth().withMaximumValue()
   val firstDayOfWeek = startOfMonth.dayOfWeek().get()

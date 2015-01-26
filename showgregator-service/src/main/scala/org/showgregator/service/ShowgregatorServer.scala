@@ -21,4 +21,5 @@ object ShowgregatorServer extends FinatraServer {
   register(new RegisterController)
   register(new VerifyEmailController)
   register(new UserController)
+  register(new CalendarController)
 }

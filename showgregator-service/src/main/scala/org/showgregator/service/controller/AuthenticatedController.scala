@@ -1,8 +1,7 @@
 package org.showgregator.service.controller
 
-import com.twitter.finatra.{ResponseBuilder, Controller}
+import com.twitter.finatra.{Request, ResponseBuilder}
 import org.showgregator.service.model._
-import com.twitter.finagle.http.{Response, Request}
 import org.showgregator.service.session.{Session => UserSession, SessionStore}
 import java.util.UUID
 import com.twitter.util.{Throw, Return, Try, Future}
@@ -19,7 +18,8 @@ import com.websudos.phantom.Implicits.Session
  * Time: 7:56 PM
  * To change this template use File | Settings | File Templates.
  */
-class PhantomConnectedController(implicit val session: Session, val context: ExecutionContext) extends ControllerBase
+class PhantomConnectedController(implicit val session: Session,
+                                 implicit val context: ExecutionContext) extends ControllerBase
 
 class AuthenticatedController(implicit val sessionStore:SessionStore, override val session: Session, override val context: ExecutionContext) extends PhantomConnectedController {
   def user(request: Request):Future[Option[Either[User, TransientUser]]] = {
@@ -52,10 +52,19 @@ class AuthenticatedController(implicit val sessionStore:SessionStore, override v
   def authenticated(request: Request): Future[Boolean] =
     user(request).map(_.isDefined)
 
-  def !!!(request: Request)(service: (Request)=>Future[ResponseBuilder]): Future[ResponseBuilder] = {
+  /**
+   * Mark your resource as requiring authentication.
+   *
+   * E.g. get("/foo") { !!! { request => ... } }
+   *
+   * @param service
+   * @param request
+   * @return
+   */
+  def !!!(service: (Request)=>Future[ResponseBuilder])(request: Request): Future[ResponseBuilder] = {
     authenticated(request).flatMap({
       case true => service(request)
-      case false => Future(redirect("/login", "Please log in.", permanent = false))
+      case false => redirect(s"/login#${request.uri}", "Please log in.", permanent = false).toFuture
     })
   }
 }

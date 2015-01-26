@@ -3,12 +3,21 @@
         <title>LOG IN to SHOWGREGATOR</title>
         <link rel="stylesheet" href="/css/main.css">
         <link rel="stylesheet" href="/css/login.css">
+        <script language="javascript">
+            function getNext() {
+                var next = window.location.hash.substring(1);
+                if (next) {
+                    document.getElementById("then").value = next;
+                }
+            }
+        </script>
     </head>
-    <body>
+    <body onload="getNext();">
         <div class="main">
             <div class="title">LOGIN</div>
             <div class="content">
                 <form action="/login" method="POST" id="login">
+                    <input type="hidden" name="then" id="then">
                     <p>
                         <span class="label">
                             <label for="email">Email</label>

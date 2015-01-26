@@ -1,0 +1,29 @@
+ul.day_names {
+    display: table-row;
+    width: 100%;
+    margin-left: 5%;
+    margin-right: 5%;
+}
+
+ul.day_names li.day_name {
+    display: table-cell;
+    background-color: black;
+    color: white;
+    text-align: center;
+    text-transform: uppercase;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+ul.week {
+    display: table-row;
+    width: 100%;
+    margin-left: 5%;
+    margin-right: 5%;
+}
+
+ul.week li.day {
+    display: table-cell;
+    border: 1px solid black;
+    min-height: 100px;
+}

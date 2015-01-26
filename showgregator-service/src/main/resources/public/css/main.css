@@ -1,3 +1,9 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
 body {
     color: black;
     background-color: white;
@@ -5,18 +11,24 @@ body {
 }
 
 div.main {
-    margin-left: 15%;
-    margin-right: 15%;
-    margin-top: 5%;
+    box-sizing: border-box;
+    position: relative;
+    padding-left: 15%;
+    padding-right: 15%;
+    padding-top: 0pt;
+    margin: 0pt;
+    /* padding-top: 5%; */
     min-height: 100%;
 }
 
 div.main div.title {
+    padding-top: 75px;
     font-family: "Helvetica Neue", Helvetica, sans;
     font-weight: bold;
     font-size: 64pt;
     border-bottom: 5pt solid black;
     line-height: 75%;
+    text-transform: uppercase;
 }
 
 div.main div.title span#logout {
@@ -56,6 +68,7 @@ span.error a {
 }
 
 div.main div.footer {
+    height: 50pt;
     font-size: small;
     width: 100%;
     position: absolute;

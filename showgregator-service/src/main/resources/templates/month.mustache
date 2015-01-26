@@ -1,0 +1,37 @@
+<html>
+    <head>
+        <title>{{ month }} {{ year }}</title>
+        <link rel="stylesheet" href="/css/main.css">
+        <link rel="stylesheet" href="/css/month.css">
+    </head>
+    <body>
+        <div class="main">
+            <div class="title">
+                {{ month }} {{ year }}
+                <span id="logout"><a href="/logout">Logout</a></span>
+            </div>
+            <div class="content">
+                <ul class="day_names">
+                    <li class="day_name">Monday</li>
+                    <li class="day_name">Tuesday</li>
+                    <li class="day_name">Wednesday</li>
+                    <li class="day_name">Thursday</li>
+                    <li class="day_name">Friday</li>
+                    <li class="day_name">Saturday</li>
+                    <li class="day_name">Sunday</li>
+                </ul>
+                {{#weeks}}
+                    <ul class="week">
+                        {{#.}}
+                            <li class="day">{{.}}</li>
+                        {{/.}}
+                    </ul>
+                {{/weeks}}
+            </div>
+            <div class="footer">
+                Copyright &copy; 2015 Casey Marshall<br>
+                Fork us so hard on <a href="https://github.com/csm/showgregator">github</a>.
+            </div>
+        </div>
+    </body>
+</html>

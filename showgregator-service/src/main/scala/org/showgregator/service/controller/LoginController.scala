@@ -23,9 +23,18 @@ class LoginController(implicit val sessionStore: SessionStore,
     render.static("/html/login.html").toFuture
   }
 
+  def nextPage(next:Option[String]):String = {
+    // TODO validate URL
+    next match {
+      case Some(s) if s.trim.length > 0 => s
+      case _ => "/home"
+    }
+  }
+
   post("/login") { request =>
     (request.params.get("email"), request.params.get("password")) match {
       case (Some(email), Some(password)) => {
+        log.info("next: %s", request.params.getOrElse("then", "<NONE>"))
         UserRecord.getByEmail(email).asFinagle.flatMap {
           case Some(user) => Future(PasswordHashing(password.toCharArray,
               user.hashedPassword.iterations, Some(user.hashedPassword.salt),
@@ -33,7 +42,7 @@ class LoginController(implicit val sessionStore: SessionStore,
             .flatMap(hash => if (MessageDigest.isEqual(hash.hash, user.hashedPassword.hash)) {
               val s = UserSession(UUID.randomUUID(), user.email, loggedIn = true, DateTime.now(), DateTime.now().plusHours(12))
               sessionStore.put(s).asFinagle.flatMap {
-                case true => redirect(request.params.getOrElse("then", "/home"), "logged in", permanent = false).cookie("SessionId", s.id.toString).toFuture
+                case true => redirect(nextPage(request.params.get("then")), "logged in", permanent = false).cookie("SessionId", s.id.toString).toFuture
                 case false => render.view(new ServerErrorView("logging in failed, try again later")).status(503).toFuture
               }
             } else {
