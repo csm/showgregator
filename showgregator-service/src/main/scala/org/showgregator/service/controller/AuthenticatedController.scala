@@ -3,9 +3,9 @@ package org.showgregator.service.controller
 import com.twitter.finatra.{ResponseBuilder, Controller}
 import org.showgregator.service.model._
 import com.twitter.finagle.http.{Response, Request}
-import org.showgregator.service.session.SessionStore
+import org.showgregator.service.session.{Session => UserSession, SessionStore}
 import java.util.UUID
-import com.twitter.util.Future
+import com.twitter.util.{Throw, Return, Try, Future}
 import org.showgregator.service.model.User
 import scala.Some
 import org.showgregator.service.finagle.FinagleFutures.ScalaFutureWrapper
@@ -26,7 +26,11 @@ class AuthenticatedController(implicit val sessionStore:SessionStore, override v
     request.cookies.get("SessionId") match {
       case Some(cookie) => {
         for {
-          userSession <- sessionStore.get(UUID.fromString(cookie.value))
+          sessionId <- ScalaFuture.successful(Try(UUID.fromString(cookie.value)))
+          userSession:Option[UserSession] <- sessionId match {
+            case Return(sid) => sessionStore.get(sid)
+            case Throw(_) => ScalaFuture.successful(None)
+          }
           user <- userSession match {
             case Some(s) if s.loggedIn => UserRecord.getByEmail(s.email).map(u => (u, None))
             case Some(s) if !s.loggedIn => TransientUserRecord.forEmail(s.email).map(u => (None, u))
