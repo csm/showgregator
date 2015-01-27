@@ -84,6 +84,7 @@ dependencies {
     compile 'net.debasishg:redisclient_2.10:2.13'
     compile 'com.livestream:scredis_2.10:2.0.6'
     //compile 'org.bouncycastle:bcprov-jdk15:1.46'
+    compile 'com.esotericsoftware:kryo:3.0.0'
 
     //compile 'com.websudos:phantom-udt_2.10:1.5.0'
     //compile 'org.showgregator:showgregator-core:latest.release'

@@ -22,30 +22,34 @@ class PhantomConnectedController(implicit val session: Session,
                                  implicit val context: ExecutionContext) extends ControllerBase
 
 class AuthenticatedController(implicit val sessionStore:SessionStore, override val session: Session, override val context: ExecutionContext) extends PhantomConnectedController {
-  def user(request: Request):Future[Option[Either[User, TransientUser]]] = {
+  def user(request: Request):Future[Option[BaseUser]] = {
     request.cookies.get("SessionId") match {
       case Some(cookie) => {
+        log.debug("looking up session %s", cookie.value)
         for {
-          sessionId <- ScalaFuture.successful(Try(UUID.fromString(cookie.value)))
+          sessionId <- Future.value(Try(UUID.fromString(cookie.value)))
           userSession:Option[UserSession] <- sessionId match {
-            case Return(sid) => sessionStore.get(sid)
-            case Throw(_) => ScalaFuture.successful(None)
+            case Return(sid) => sessionStore.get(sid).asFinagle
+            case Throw(_) => Future.value(None)
           }
           user <- userSession match {
-            case Some(s) if s.loggedIn => UserRecord.getByEmail(s.email).map(u => (u, None))
-            case Some(s) if !s.loggedIn => TransientUserRecord.forEmail(s.email).map(u => (None, u))
-            case None => ScalaFuture.successful((None, None))
-          }
-        } yield {
-          user match {
-            case (Some(u), None) => Some(Left(u))
-            case (None, Some(u)) => Some(Right(u))
-            case _ => None
-          }
-        }
-      }.asFinagle
+            case Some(s) => {
+              log.debug("found session %s", s)
+              Future.value(Some(s.user))
+            }
 
-      case None => Future(None)
+            case None => {
+              log.debug("no session found")
+              Future.value(None)
+            }
+          }
+        } yield user
+      }
+
+      case None => {
+        log.debug("no session ID")
+        Future.value(None)
+      }
     }
   }
 

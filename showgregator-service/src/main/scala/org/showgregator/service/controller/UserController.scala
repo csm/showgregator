@@ -9,7 +9,7 @@ class UserController(implicit override val sessionStore:SessionStore, override v
   get("/home") {
     !!! { request =>
       user(request).flatMap {
-        case Some(u) => render.view(new UserHomeView(if (u.isLeft) u.left.get else u.right.get)).toFuture
+        case Some(u) => render.view(new UserHomeView(u)).toFuture
         case None => redirect("/login", "please log in", permanent = false).toFuture
       }
     }

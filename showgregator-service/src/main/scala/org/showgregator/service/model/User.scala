@@ -13,7 +13,7 @@ import com.websudos.phantom.Implicits._
 
 abstract class BaseUser(val email:String)
 
-case class User(_email: String, handle: Option[String], hashedPassword: HashedPassword) extends BaseUser(_email)
+case class User(_email: String, handle: Option[String], hashedPassword: HashedPassword = null) extends BaseUser(_email)
 
 sealed class UserRecord extends CassandraTable[UserRecord, User] {
   // the id field will be the email address, downcased.

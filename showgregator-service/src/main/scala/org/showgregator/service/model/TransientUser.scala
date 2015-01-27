@@ -7,7 +7,7 @@ import com.datastax.driver.core.Row
 import scala.concurrent.Future
 
 case class TransientUser(_email: String,
-                         id: UUID)
+                         id: UUID = null)
   extends BaseUser(_email)
 
 object TransientUser {
@@ -17,7 +17,8 @@ object TransientUser {
 }
 
 sealed class TransientUserRecord extends CassandraTable[TransientUserRecord, TransientUser] {
-  object email extends StringColumn(this) with PartitionKey[String]
+  object eid extends StringColumn(this) with PartitionKey[String]
+  object email extends StringColumn(this)
   object id extends UUIDColumn(this)
 
   override def fromRow(r: Row): TransientUser = TransientUser(email(r), id(r))
@@ -34,11 +35,12 @@ object TransientUserRecord extends TransientUserRecord with Connector {
   override val tableName = "transient_users"
 
   def forEmail(email: String)(implicit session:Session): Future[Option[TransientUser]] = {
-    select.where(_.email eqs email).one()
+    select.where(_.eid eqs email.toLowerCase).one()
   }
 
   def insertUser(user: TransientUser)(implicit session:Session): Future[ResultSet] = {
-    insert.value(_.email, user.email)
+    insert.value(_.eid, user.email.toLowerCase)
+      .value(_.email, user.email)
       .value(_.id, user.id)
       .future()
   }
