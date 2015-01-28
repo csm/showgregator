@@ -7,7 +7,7 @@ import com.websudos.phantom.column.DateTimeColumn
 import scala.concurrent.Future
 import com.websudos.phantom.Implicits._
 
-case class EventInCalendar(calendar: UUID, event: UUID, when: DateTime, title: String) {
+case class EventInCalendar(calendar: UUID, event: UUID, when: DateTime, title: String, starCount: Long) {
   def getCalendar(implicit session:Session): Future[Option[Calendar]] = {
     CalendarRecord.getById(calendar)
   }
@@ -22,8 +22,9 @@ sealed class EventInCalendarRecord extends CassandraTable[EventInCalendarRecord,
   object event extends UUIDColumn(this)
   object when extends DateTimeColumn(this) with PrimaryKey[DateTime] with ClusteringOrder[DateTime] with KeysDescending
   object title extends StringColumn(this)
+  object starCount extends CounterColumn(this)
 
-  def fromRow(r: Row): EventInCalendar = EventInCalendar(calendar(r), event(r), when(r), title(r))
+  def fromRow(r: Row): EventInCalendar = EventInCalendar(calendar(r), event(r), when(r), title(r), starCount(r))
 }
 
 object EventInCalendarRecord extends EventInCalendarRecord with Connector {

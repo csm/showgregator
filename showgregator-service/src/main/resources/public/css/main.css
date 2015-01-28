@@ -35,6 +35,8 @@ div.main div.title span#logout {
     float: right;
     clear: none;
     font-size: medium;
+    line-height: normal;
+    text-align: right;
 }
 
 span#logout a {
