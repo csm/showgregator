@@ -11,7 +11,7 @@ import java.security.MessageDigest
  * Time: 8:38 PM
  * To change this template use File | Settings | File Templates.
  */
-class UserHomeView(user: BaseUser) extends View {
+class UserHomeView(user: BaseUser) extends BaseUserView(user) {
   val handle = user match {
     case u:User => u.handle.getOrElse(u.email)
     case u:TransientUser => u.email

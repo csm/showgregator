@@ -65,10 +65,10 @@ class AuthenticatedController(implicit val sessionStore:SessionStore, override v
    * @param request
    * @return
    */
-  def !!!(service: (Request)=>Future[ResponseBuilder])(request: Request): Future[ResponseBuilder] = {
-    authenticated(request).flatMap({
-      case true => service(request)
-      case false => redirect(s"/login#${request.uri}", "Please log in.", permanent = false).toFuture
+  def !!!(service: (Request, BaseUser)=>Future[ResponseBuilder])(request: Request): Future[ResponseBuilder] = {
+    user(request).flatMap({
+      case Some(user) => service(request, user)
+      case None => redirect(s"/login#${request.uri}", "Please log in.", permanent = false).toFuture
     })
   }
 }

@@ -18,14 +18,21 @@ import org.showgregator.service.model.RegisterToken
 class RegisterController(implicit override val session:Session, override val context: ExecutionContext) extends PhantomConnectedController {
 
   get("/register/:token") { request =>
-    val token = Try(UUID.fromString(request.routeParams.get("token").get)).rescue({
+    val tokenId = Try(UUID.fromString(request.routeParams.get("token").get)).rescue({
       case _ => Return(new UUID(0, 0))
     }).get()
     for {
-      token:Option[RegisterToken] <- RegisterTokenRecord.findToken(token).asFinagle
+      token:Option[RegisterToken] <- RegisterTokenRecord.findToken(tokenId).asFinagle
+      transientUser:Option[TransientUser] <- token match {
+        case Some(t) => Future.value(None)
+        case None => ReverseTransientUserRecord.forUuid(tokenId).asFinagle
+      }
       response:ResponseBuilder <- token match {
         case Some(t) => render.view(new RegisterView(t.token.toString, t.email.getOrElse(""))).toFuture
-        case None => render.view(new ForbiddenView("Invalid token.")).status(403).toFuture
+        case None => transientUser match {
+          case Some(tu) => render.view(new RegisterView(tu.id.toString, tu.email)).toFuture
+          case None => render.view(new ForbiddenView("Invalid token.")).status(403).toFuture
+        }
       }
     } yield response
   }
@@ -51,9 +58,12 @@ class RegisterController(implicit override val session:Session, override val con
       } else {
         Future(None)
       }
+      transientUser:Option[TransientUser] <- if (valid && token.isEmpty) {
+        ReverseTransientUserRecord.forUuid(tokenId).asFinagle
+      } else Future.value(None)
       response:ResponseBuilder <- {
-        token match {
-          case Some(t) => {
+        (token, transientUser) match {
+          case (Some(t), None) => {
             for {
               pendingUser <- Future(PendingUser(UUID.randomUUID(),
                 request.params.get("email").get, request.params.get("handle"),
@@ -64,7 +74,19 @@ class RegisterController(implicit override val session:Session, override val con
               response <- render.view(new SuccessfulRegisterView(pendingUser.email)).toFuture
             } yield response
           }
-          case None => render.view(new ForbiddenView("Registration invalid.")).status(403).toFuture
+          case (None, Some(tu:TransientUser)) if tu.email.equalsIgnoreCase(request.params.get("email").get) => {
+            for {
+              pendingUser <- Future(PendingUser(UUID.randomUUID(),
+                request.params.get("email").get, request.params.get("handle"),
+                PasswordHashing(request.params.get("password").get.toCharArray)))
+              insertUser <- PendingUserRecord.insertUser(pendingUser).asFinagle
+              reverseUser <- ReversePendingUserRecord.insertUser(pendingUser).asFinagle
+              deleteTUser <- TransientUserRecord.delete.where(_.eid eqs tu.email.toLowerCase).future().asFinagle
+              revDeleteTUser <- ReverseTransientUserRecord.delete.where(_.id eqs tu.id).future().asFinagle
+              response <- render.view(new SuccessfulRegisterView(tu.email)).toFuture
+            } yield response
+          }
+          case _ => render.view(new ForbiddenView("Registration invalid.")).status(403).toFuture
         }
       }
     } yield response

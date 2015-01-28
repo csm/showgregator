@@ -69,7 +69,7 @@ class RedisSessionStore(redis: Redis, ttl: Duration = Duration.standardHours(1))
 
   implicit val reader = BytesReader
   def get(id: UUID): Future[Option[Session]] = {
-    val sId = id.toString
+    val sId = s"session.${id.toString}"
     for {
       map:Option[Array[Byte]] <- redis.get[Array[Byte]](sId)
       ttl:Either[Boolean, Long] <- map match {
@@ -89,16 +89,16 @@ class RedisSessionStore(redis: Redis, ttl: Duration = Duration.standardHours(1))
 
   implicit val writer = BytesWriter
   def put(session: Session): Future[Boolean] = {
-    val id = session.id.toString
+    val id = s"session.${session.id.toString}"
     val a = freezeSession(session)
     redis.set(id, a).flatMap(_ => redis.pExpire(id, ttl.getMillis))
   }
 
   def delete(id: UUID): Future[Boolean] = {
-    redis.del(id.toString).map(_ == 1)
+    redis.del(s"session.${id.toString}").map(_ == 1)
   }
 
   def extend(id: UUID): Future[Boolean] = {
-    redis.pExpire(id.toString, ttl.getMillis)
+    redis.pExpire(s"session.${id.toString}", ttl.getMillis)
   }
 }

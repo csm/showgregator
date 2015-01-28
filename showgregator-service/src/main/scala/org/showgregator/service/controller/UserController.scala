@@ -7,10 +7,9 @@ import org.showgregator.service.view.UserHomeView
 
 class UserController(implicit override val sessionStore:SessionStore, override val session: Session, override val context: ExecutionContext) extends AuthenticatedController {
   get("/home") {
-    !!! { request =>
-      user(request).flatMap {
-        case Some(u) => render.view(new UserHomeView(u)).toFuture
-        case None => redirect("/login", "please log in", permanent = false).toFuture
+    !!! {
+      (request, user) => {
+        render.view(new UserHomeView(user)).toFuture
       }
     }
   }

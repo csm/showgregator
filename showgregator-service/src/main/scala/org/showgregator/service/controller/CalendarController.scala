@@ -26,12 +26,12 @@ class CalendarController(override implicit val sessionStore:SessionStore,
   }
 
   get("/calendar/:year/:month") {
-    !!! { request:Request =>
+    !!! { (request:Request, user) =>
       val year = Integer.parseInt(request.routeParams.get("year").get)
       val month = Integer.parseInt(request.routeParams.get("month").get)
       val monthName = DateFormatSymbols.getInstance().getMonths()(month - 1)
       val calMonth = new CalendarMonth(year, month)
-      render.view(new MonthView(monthName, year, calMonth.allDays)).toFuture
+      render.view(new MonthView(monthName, year, calMonth.allDays, user)).toFuture
     }
   }
 }

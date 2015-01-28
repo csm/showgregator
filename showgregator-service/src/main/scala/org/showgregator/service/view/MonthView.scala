@@ -2,6 +2,7 @@ package org.showgregator.service.view
 
 import org.joda.time.DateTime
 import com.twitter.finatra.View
+import org.showgregator.service.model.BaseUser
 
 /**
  * Created with IntelliJ IDEA.
@@ -10,6 +11,6 @@ import com.twitter.finatra.View
  * Time: 10:11 PM
  * To change this template use File | Settings | File Templates.
  */
-class MonthView(val month: String, val year: Int, val weeks: List[List[DateTime]]) extends View {
+class MonthView(val month: String, val year: Int, val weeks: List[List[DateTime]], user: BaseUser) extends BaseUserView(user) {
   def template: String = "templates/month.mustache"
 }

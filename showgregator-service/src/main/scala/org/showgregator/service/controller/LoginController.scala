@@ -11,7 +11,7 @@ import org.showgregator.service.finagle.FinagleFutures.ScalaFutureWrapper
 import org.showgregator.service.session.{Session => UserSession, SessionStore}
 import java.util.UUID
 import org.joda.time.DateTime
-import org.showgregator.service.view.{BadRequestView, ForbiddenView, ServerErrorView}
+import org.showgregator.service.view.{StillPendingView, BadRequestView, ForbiddenView, ServerErrorView}
 import org.showgregator.service.finagle.FinagleFutures.ScalaFutureWrapper
 import com.twitter.finagle.http.Cookie
 import com.websudos.phantom.Implicits.Session
@@ -43,27 +43,51 @@ class LoginController(implicit val sessionStore: SessionStore,
   post("/login") { request =>
     (request.params.get("email"), request.params.get("password")) match {
       case (Some(email), Some(password)) => {
-        log.info("next: %s", request.params.getOrElse("then", "<NONE>"))
-        UserRecord.getByEmail(email).asFinagle.flatMap {
-          case Some(user) => Future(PasswordHashing(password.toCharArray,
-              user.hashedPassword.iterations, Some(user.hashedPassword.salt),
-              user.hashedPassword.alg))
-            .flatMap(hash => if (MessageDigest.isEqual(hash.hash, user.hashedPassword.hash)) {
-              val s = UserSession(UUID.randomUUID(), user, DateTime.now(), DateTime.now().plusHours(12))
-              sessionStore.put(s).asFinagle.flatMap {
-                case true => redirect(nextPage(request.params.get("then")), "logged in", permanent = false).cookie(makeCookie(s.id)).toFuture
-                case false => render.view(new ServerErrorView("logging in failed, try again later")).status(503).toFuture
-              }
-            } else {
-              render.status(401).static("/html/401.html").toFuture
-            })
+        for {
+          user:Option[User] <- UserRecord.getByEmail(email).asFinagle
+          reversePendingUser <- if (user.isEmpty)
+            ReversePendingUserRecord.getByEmail(email).asFinagle
+          else
+            Future.value(None)
+          pendingUser <- if (reversePendingUser.isDefined)
+            PendingUserRecord.getPendingUser(reversePendingUser.get.token).asFinagle
+          else
+            Future.value(None)
+          hashedPassword <- (user, pendingUser) match {
+            case (Some(u), None) => Future(PasswordHashing(password.toCharArray,
+              u.hashedPassword.iterations, Some(u.hashedPassword.salt),
+              u.hashedPassword.alg))
+            case (None, Some(pu)) => Future(PasswordHashing(password.toCharArray,
+              pu.hashedPassword.iterations, Some(pu.hashedPassword.salt),
+              pu.hashedPassword.alg))
+            case _ => Future(PasswordHashing(password.toCharArray))
+          }
+          session <- user match {
+            case Some(u) => {
+              val s = UserSession(UUID.randomUUID(), u, DateTime.now(), DateTime.now().plusHours(12))
+              sessionStore.put(s).map(if (_) Some(s) else None).asFinagle
+            }
+            case None => Future.value(None)
+          }
 
-          case None => Future(PasswordHashing("the powers that be".toCharArray))
-            .flatMap(hash => {
-              MessageDigest.isEqual(hash.hash, hash.hash)
-              render.status(401).static("/html/401.html").toFuture
-            })
-        }
+          hashesMatch <- if (user.isDefined)
+            Future(MessageDigest.isEqual(hashedPassword.hash, user.get.hashedPassword.hash))
+          else if (pendingUser.isDefined)
+            Future(MessageDigest.isEqual(hashedPassword.hash, pendingUser.get.hashedPassword.hash))
+          else
+            Future(MessageDigest.isEqual(hashedPassword.hash, hashedPassword.hash)).map(_ => false)
+
+          response <- if (user.isDefined && hashesMatch) {
+            if (session.isDefined)
+              redirect(nextPage(request.params.get("then")), "logged in", permanent = false).cookie(makeCookie(session.get.id)).toFuture
+            else
+              render.view(new ServerErrorView("logging in failed, try again later")).status(503).toFuture
+          } else if (pendingUser.isDefined && hashesMatch) {
+            render.view(new StillPendingView(pendingUser.get.email)).toFuture
+          } else {
+            render.status(401).static("/html/401.html").toFuture
+          }
+        } yield response
       }
       case _ => render.status(401).static("/401.html").toFuture
     }
