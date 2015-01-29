@@ -55,21 +55,30 @@ object PendingUserRecord extends PendingUserRecord with Connector {
    * @return A future yielding true if the validation succeeded.
    */
   def verifyUser(id: UUID)(implicit session: Session): Future[Boolean] = {
+    val calendarId = UUID.randomUUID()
     for {
       user <- getPendingUser(id)
       insertion <- user match {
-        case Some(u) => UserRecord.insertUser(User(u.user, u.email, u.handle, u.hashedPassword)).map(_ => true)
+        case Some(u) => UserRecord.insertUser(User(u.user, u.email, u.handle, u.hashedPassword)).map(_.wasApplied())
         case None => Future.successful(false)
       }
+      addCalendar <- insertion match {
+        case true => CalendarRecord.insertCalendar(Calendar(calendarId, "", Map(user.get.user -> CalendarPermissions.Admin))).map(_.wasApplied())
+        case false => Future.successful(false)
+      }
+      addUserCalendar <- addCalendar match {
+        case true => UserCalendarRecord.insertCalendar(UserCalendar(user.get.user, calendarId)).map(_.wasApplied())
+        case false => Future.successful(false)
+      }
       deletion <- insertion match {
-        case true => PendingUserRecord.delete.where(_.id eqs id).future().map(_ => true)
+        case true => PendingUserRecord.delete.where(_.id eqs id).future().map(_.wasApplied())
         case false => Future.successful(false)
       }
       reverseDeletion <- deletion match {
-        case true => ReversePendingUserRecord.delete.where(_.id eqs user.get.email.toLowerCase).future().map(_ => true)
+        case true => ReversePendingUserRecord.delete.where(_.id eqs user.get.email.toLowerCase).future().map(_.wasApplied())
         case false => Future.successful(false)
       }
-    } yield deletion && reverseDeletion
+    } yield addUserCalendar && reverseDeletion
   }
 }
 

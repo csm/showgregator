@@ -5,6 +5,7 @@ object CalendarPermissions {
   val AddEvent    = 1 << 1
   val DeleteEvent = 1 << 2
   val Share       = 1 << 3
+  val Admin       = 1 << 4
 }
 
 object EventPermissions {
