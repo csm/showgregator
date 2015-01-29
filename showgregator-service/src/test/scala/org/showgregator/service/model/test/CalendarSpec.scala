@@ -1,6 +1,6 @@
 package org.showgregator.service.model.test
 
-import org.showgregator.service.model.{Permissions, Calendar, CalendarRecord, Connector}
+import org.showgregator.service.model.{CalendarPermissions, Calendar, CalendarRecord, Connector}
 import com.websudos.phantom.testing.CassandraTest
 import org.scalatest.{ConfigMap, FlatSpec}
 import scala.concurrent.Await
@@ -18,7 +18,7 @@ class CalendarSpec extends FlatSpec with CassandraTest with Connector {
 
   "insert and select the same id" should "return the same calendar" in {
     val cal = Calendar(UUID.fromString("5E6B1461-F8B7-4052-BC41-20E4D20E75F6"),
-      "A Test Calendar", Map("*" -> Permissions.Read))
+      "A Test Calendar", Map(new UUID(0, 0) -> CalendarPermissions.Read))
     Await.result(CalendarRecord.insertCalendar(cal), 5.seconds)
     val cal2 = Await.result(CalendarRecord.getById(cal.id), 5.seconds)
     cal2.isDefined should be (true)

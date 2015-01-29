@@ -12,7 +12,7 @@ import com.twitter.finatra.View
  */
 abstract class BaseUserView(val user: BaseUser) extends View {
   val logout_links = user match {
-    case u:User => s"""<span id="logout">${user.email}<br><a href="/logout">Logout</a></span>"""
+    case u:User => s"""<span id="logout"><a href="/account">${user.email}</a><br><a href="/logout">Logout</a></span>"""
     case u:TransientUser => s"""<span id="logout">${user.email}<br><a href="/register/${u.id.toString}">Register</a></span>"""
   }
 

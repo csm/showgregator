@@ -1,5 +1,7 @@
 package org.showgregator.service.model
 
+import java.util.UUID
+
 import org.showgregator.core.HashedPassword
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
@@ -10,10 +12,11 @@ import org.joda.time.Duration
 import scala.concurrent.Future
 import java.nio.ByteBuffer
 
-case class PendingUser(id: UUID, email: String, handle: Option[String], hashedPassword: HashedPassword)
+case class PendingUser(id: UUID, user: UUID, email: String, handle: Option[String], hashedPassword: HashedPassword)
 
 sealed class PendingUserRecord extends CassandraTable[PendingUserRecord, PendingUser] {
   object id extends UUIDColumn(this) with PartitionKey[UUID]
+  object user extends UUIDColumn(this)
   object email extends StringColumn(this)
   object handle extends OptionalStringColumn(this)
   object alg extends StringColumn(this)
@@ -21,8 +24,8 @@ sealed class PendingUserRecord extends CassandraTable[PendingUserRecord, Pending
   object iterations extends IntColumn(this)
   object hash extends BlobColumn(this)
 
-  def fromRow(r: Row): PendingUser = PendingUser(id(r), email(r), handle(r),
-    HashedPassword( alg(r), salt(r).asBytes, iterations(r), hash(r).asBytes))
+  def fromRow(r: Row): PendingUser = PendingUser(id(r), user(r), email(r), handle(r),
+    HashedPassword(alg(r), salt(r).asBytes, iterations(r), hash(r).asBytes))
 }
 
 object PendingUserRecord extends PendingUserRecord with Connector {
@@ -30,6 +33,7 @@ object PendingUserRecord extends PendingUserRecord with Connector {
 
   def insertUser(user: PendingUser, ttl: Duration = Duration.standardDays(15))(implicit session:Session):Future[ResultSet] = {
     insert.value(_.id, user.id)
+      .value(_.user, user.user)
       .value(_.email, user.email)
       .value(_.handle, user.handle)
       .value(_.alg, user.hashedPassword.alg)
@@ -45,7 +49,7 @@ object PendingUserRecord extends PendingUserRecord with Connector {
   }
 
   /**
-   * Verifies a user. Inserts a live User record, and deletes this PendingUser.
+   * Verifies a user. Inserts a live User record, adds a calendar for the user, and deletes this PendingUser.
    * @param id The pending user token.
    * @param session The session.
    * @return A future yielding true if the validation succeeded.
@@ -54,7 +58,7 @@ object PendingUserRecord extends PendingUserRecord with Connector {
     for {
       user <- getPendingUser(id)
       insertion <- user match {
-        case Some(u) => UserRecord.insertUser(User(u.email, u.handle, u.hashedPassword)).map(_ => true)
+        case Some(u) => UserRecord.insertUser(User(u.user, u.email, u.handle, u.hashedPassword)).map(_ => true)
         case None => Future.successful(false)
       }
       deletion <- insertion match {

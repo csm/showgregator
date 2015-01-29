@@ -23,6 +23,7 @@ object RedisSessionStore {
     s.user match {
       case u:User => {
         kryo.writeObject(out, true)
+        kryo.writeObject(out, u.id)
         kryo.writeObject(out, u.email)
         u.handle match {
           case Some(h) => {
@@ -48,6 +49,7 @@ object RedisSessionStore {
     val t = new DateTime(kryo.readObject(input, classOf[Long]))
     val isLoggedIn = kryo.readObject(input, classOf[Boolean])
     val user = if (isLoggedIn) {
+      val uid = kryo.readObject(input, classOf[UUID])
       val email = kryo.readObject(input, classOf[String])
       val hasHandle = kryo.readObject(input, classOf[Boolean])
       val handle = if (hasHandle) {
@@ -55,7 +57,7 @@ object RedisSessionStore {
       } else {
         None
       }
-      User(email, handle)
+      User(uid, email, handle)
     } else {
       val email = kryo.readObject(input, classOf[String])
       TransientUser(email)

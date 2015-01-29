@@ -1,5 +1,5 @@
 html, body {
-    height: 100%;
+    /*height: 100%;*/
     margin: 0;
     padding: 0;
 }
@@ -13,8 +13,6 @@ body {
 div.main {
     box-sizing: border-box;
     position: relative;
-    padding-left: 15%;
-    padding-right: 15%;
     padding-top: 0pt;
     margin: 0pt;
     /* padding-top: 5%; */
@@ -29,6 +27,8 @@ div.main div.title {
     border-bottom: 5pt solid black;
     line-height: 75%;
     text-transform: uppercase;
+    padding-left: 15%;
+    padding-right: 15%;
 }
 
 div.main div.title span#logout {
@@ -47,6 +47,8 @@ span#logout a {
 div.main div.content {
     margin-top: 30pt;
     margin-bottom: 30pt;
+    padding-left: 15%;
+    padding-right: 15%;
 }
 
 a {
@@ -73,15 +75,15 @@ div.main div.footer {
     height: 50pt;
     font-size: small;
     width: 100%;
-    position: absolute;
+    /*position: absolute;*/
     bottom: 0;
     left: 0;
     color: white;
     background-color: black;
     padding-top: 20pt;
     padding-bottom: 20pt;
-    padding-left: 20%;
-    padding-right: 20%;
+    padding-left: 15%;
+    padding-right: 15%;
 }
 
 div.main div.footer a {
@@ -112,4 +114,6 @@ div.content div#top-navbar {
     border-bottom: 1pt solid black;
     padding-bottom: 10pt;
     margin-bottom: 10pt;
+    text-transform: uppercase;
 }
+

@@ -28,17 +28,21 @@ object InitTables extends App {
   }
 
   val f = for {
-    calendars <- CalendarRecord.create.future()
-    events <- EventRecord.create.future()
-    eventComments <- EventCommentRecord.create.future()
-    eventsInCalendar <- EventInCalendarRecord.create.future()
-    transientUsers <- TransientUserRecord.create.future()
-    reverseTransientUsers <- ReverseTransientUserRecord.create.future()
-    users <- UserRecord.create.future()
-    venues <- VenueRecord.create.future()
-    registerTokens <- RegisterTokenRecord.create.future()
-    pendingUsers <- PendingUserRecord.create.future()
-    reversePendingUsers <- ReversePendingUserRecord.create.future()
+    calendars <- CalendarRecord.create.future().map(_.wasApplied())
+    events <- EventRecord.create.future().map(_.wasApplied())
+    eventComments <- EventCommentRecord.create.future().map(_.wasApplied())
+    eventsInCalendar <- EventInCalendarRecord.create.future().map(_.wasApplied())
+    transientUsers <- TransientUserRecord.create.future().map(_.wasApplied())
+    reverseTransientUsers <- ReverseTransientUserRecord.create.future().map(_.wasApplied())
+    users <- UserRecord.create.future().map(_.wasApplied())
+    venues <- VenueRecord.create.future().map(_.wasApplied())
+    registerTokens <- RegisterTokenRecord.create.future().map(_.wasApplied())
+    pendingUsers <- PendingUserRecord.create.future().map(_.wasApplied())
+    reversePendingUsers <- ReversePendingUserRecord.create.future().map(_.wasApplied())
+    userEmails <- UserEmailRecord.create.future().map(_.wasApplied())
+    userCalendarRecord <- UserCalendarRecord.create.future().map(_.wasApplied())
+    emailChangeRecord <- PendingEmailChangeRecord.create.future().map(_.wasApplied())
+    passwordChange <- PasswordChangeRecord.create.future().map(_.wasApplied())
   } yield (calendars,
       events,
       eventComments,
@@ -49,7 +53,11 @@ object InitTables extends App {
       venues,
       registerTokens,
       pendingUsers,
-      reversePendingUsers)
+      reversePendingUsers,
+      userEmails,
+      userCalendarRecord,
+      emailChangeRecord,
+      passwordChange)
   println(Await.result(f, 1.minute))
   System.exit(0)
 }

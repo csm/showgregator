@@ -5,7 +5,7 @@ import java.util.UUID
 import com.websudos.phantom.testing.CassandraTest
 import org.joda.time.DateTime
 import org.scalatest.FlatSpec
-import org.showgregator.service.model.{Connector, Event, EventRecord, Permissions}
+import org.showgregator.service.model.{Connector, Event, EventRecord, EventPermissions}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -25,7 +25,7 @@ class EventSpec extends FlatSpec with CassandraTest with Connector {
     val venue = new UUID(0, 0)
     val event = Event(id, DateTime.now(), "Test Events and the Data Models",
       venue, None, "Riotous show where data is written and read from a database!",
-      Map("*" -> (Permissions.Read | Permissions.Write)))
+      Map(new UUID(0, 0) -> (EventPermissions.Read | EventPermissions.Edit)))
     Await.result(EventRecord.insertEvent(event), 5.seconds)
     val event2 = Await.result(EventRecord.getById(id), 5.seconds)
     event2.isDefined should be (true)

@@ -11,32 +11,37 @@
                 {{{ logout_links }}}
             </div>
             <div class="content">
-                <div class"calendar-nav">
+                <div id="top-navbar">{{{ navbar_links }}}</div>
+                <div class="calendar-nav">
                     <span class="back">
-                        <a href="/calendar{{ calendar_self }}/{{ last_year_link }}">&x22D8; {{ last_year }}</a>
-                        <a href="/calendar{{ calendar_self }}/{{ last_month_link }}">&x226A; {{ last_month }}</a>
+                        <a href="/calendar{{ calendar_self }}/{{ last_year_link }}">&#x22D8; {{ last_year }}</a>
+                        <a href="/calendar{{ calendar_self }}/{{ last_month_link }}">&#x226A; {{ last_month }}</a>
                     </span>
                     <span class="forward">
-                        <a href="/calendar{{ calendar_self }}/{{ next_month_link }}">{{ next_month }} &x226B;</a>
-                        <a href="/calendar{{ calendar_self }}/{{ next_year_link }}">{{ next_year }} &x22D9;</a>
+                        <a href="/calendar{{ calendar_self }}/{{ next_month_link }}">{{ next_month }} &#x226B;</a>
+                        <a href="/calendar{{ calendar_self }}/{{ next_year_link }}">{{ next_year }} &#x22D9;</a>
                     </span>
                 </div>
-                <ul class="day_names">
-                    <li class="day_name">Monday</li>
-                    <li class="day_name">Tuesday</li>
-                    <li class="day_name">Wednesday</li>
-                    <li class="day_name">Thursday</li>
-                    <li class="day_name">Friday</li>
-                    <li class="day_name">Saturday</li>
-                    <li class="day_name">Sunday</li>
-                </ul>
-                {{#weeks}}
-                    <ul class="week">
-                        {{#.}}
-                            <li class="day">{{.}}</li>
-                        {{/.}}
+                <div id="month">
+                    <ul class="day_names">
+                        <li class="day_name">Monday</li>
+                        <li class="day_name">Tuesday</li>
+                        <li class="day_name">Wednesday</li>
+                        <li class="day_name">Thursday</li>
+                        <li class="day_name">Friday</li>
+                        <li class="day_name">Saturday</li>
+                        <li class="day_name">Sunday</li>
                     </ul>
-                {{/weeks}}
+                    {{#weeks}}
+                        <ul class="week">
+                            {{#.}}
+                                <li class="day{{{ day_classes }}}">
+                                    <a href="/calendar{{ calendar_self }}/{{ day_link }}">{{day}}</a>
+                                </li>
+                            {{/.}}
+                        </ul>
+                    {{/weeks}}
+                </div>
             </div>
             <div class="footer">
                 Copyright &copy; 2015 Casey Marshall<br>

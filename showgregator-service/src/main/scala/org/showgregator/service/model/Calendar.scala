@@ -23,14 +23,14 @@ object CalendarRecord extends CalendarRecord with Connector {
   }
 }
 
-case class Calendar(id: UUID, title: String, acl: Map[String, Int])
+case class Calendar(id: UUID, title: String, acl: Map[UUID, Int])
 
 sealed class CalendarRecord extends CassandraTable[CalendarRecord, Calendar] {
   override val tableName = "calendars"
 
   object id extends UUIDColumn(this) with PartitionKey[UUID]
   object title extends StringColumn(this)
-  object acl extends MapColumn[CalendarRecord, Calendar, String, Int](this)
+  object acl extends MapColumn[CalendarRecord, Calendar, UUID, Int](this)
 
   def fromRow(r: Row): Calendar = Calendar(id(r), title(r), acl(r))
 }

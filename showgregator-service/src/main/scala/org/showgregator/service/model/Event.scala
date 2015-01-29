@@ -17,7 +17,7 @@ case class Event(id: UUID,
                  venueId: UUID,
                  link: Option[String],
                  info: String,
-                 acl: Map[String, Int])
+                 acl: Map[UUID, Int])
 
 sealed class EventRecord extends CassandraTable[EventRecord, Event] {
   object id extends UUIDColumn(this) with PartitionKey[UUID]
@@ -26,7 +26,7 @@ sealed class EventRecord extends CassandraTable[EventRecord, Event] {
   object venueId extends UUIDColumn(this)
   object link extends OptionalStringColumn(this)
   object info extends StringColumn(this)
-  object acl extends MapColumn[EventRecord, Event, String, Int](this)
+  object acl extends MapColumn[EventRecord, Event, UUID, Int](this)
 
   def fromRow(r: Row): Event = Event(id(r), when(r), title(r), venueId(r), link(r), info(r), acl(r))
 }

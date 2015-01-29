@@ -4,7 +4,7 @@ import org.showgregator.service.session.SessionStore
 import com.websudos.phantom.Implicits._
 import scala.concurrent.ExecutionContext
 import com.twitter.finatra.Request
-import org.showgregator.service.model.CalendarMonth
+import org.showgregator.service.model.{CalendarRecord, CalendarMonth}
 import org.showgregator.service.view.MonthView
 import java.text.DateFormatSymbols
 import org.joda.time.DateTime
@@ -31,7 +31,7 @@ class CalendarController(override implicit val sessionStore:SessionStore,
       val month = Integer.parseInt(request.routeParams.get("month").get)
       val monthName = DateFormatSymbols.getInstance().getMonths()(month - 1)
       val calMonth = new CalendarMonth(year, month)
-      render.view(new MonthView(monthName, year, calMonth.allDays, user)).toFuture
+      render.view(new MonthView(calMonth.startOfMonth, monthName, year, calMonth.allDays, user)).toFuture
     }
   }
 }

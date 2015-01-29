@@ -8,12 +8,9 @@ import org.showgregator.service.model.{TransientUser, PendingUser, User}
 import org.showgregator.service.session.Session
 import org.showgregator.service.session.redis.RedisSessionStore
 
-/**
- * Created by cmarshall on 1/28/15.
- */
 class RedisSessionStoreSpec extends FlatSpec with Matchers {
   "serialize and deserialize session" should "produce the same value" in {
-    val user = User("user@domain.com", Some("Joe User"))
+    val user = User(UUID.randomUUID(), "user@domain.com", Some("Joe User"))
     val session = Session(UUID.randomUUID(), user, DateTime.now(), DateTime.now())
     val serial = RedisSessionStore.freezeSession(session)
     val session2 = RedisSessionStore.unfreezeSession(serial)
@@ -24,7 +21,7 @@ class RedisSessionStoreSpec extends FlatSpec with Matchers {
   }
 
   "serialize and deserialize session without handle" should "produce the same value" in {
-    val user = User("user@domain.com", None)
+    val user = User(UUID.randomUUID(), "user@domain.com", None)
     val session = Session(UUID.randomUUID(), user, DateTime.now(), DateTime.now())
     val serial = RedisSessionStore.freezeSession(session)
     val session2 = RedisSessionStore.unfreezeSession(serial)
