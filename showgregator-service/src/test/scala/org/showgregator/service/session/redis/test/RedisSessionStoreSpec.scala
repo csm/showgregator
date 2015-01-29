@@ -32,7 +32,7 @@ class RedisSessionStoreSpec extends FlatSpec with Matchers {
   }
 
   "serialize and deserialize transient user session" should "produce the same value" in {
-    val user = TransientUser("transient@domain.com")
+    val user = TransientUser("transient@domain.com", UUID.randomUUID())
     val session = Session(UUID.randomUUID(), user, DateTime.now(), DateTime.now())
     val serial = RedisSessionStore.freezeSession(session)
     val session2 = RedisSessionStore.unfreezeSession(serial)

@@ -65,7 +65,7 @@ class RegisterController(implicit override val session:Session, override val con
         (token, transientUser) match {
           case (Some(t), None) => {
             for {
-              pendingUser <- Future(PendingUser(UUID.randomUUID(),
+              pendingUser <- Future(PendingUser(UUID.randomUUID(), UUID.randomUUID(),
                 request.params.get("email").get, request.params.get("handle"),
                 PasswordHashing(request.params.get("password").get.toCharArray)))
               insertUser <- PendingUserRecord.insertUser(pendingUser).asFinagle
@@ -76,7 +76,7 @@ class RegisterController(implicit override val session:Session, override val con
           }
           case (None, Some(tu:TransientUser)) if tu.email.equalsIgnoreCase(request.params.get("email").get) => {
             for {
-              pendingUser <- Future(PendingUser(UUID.randomUUID(),
+              pendingUser <- Future(PendingUser(UUID.randomUUID(), tu.userId,
                 request.params.get("email").get, request.params.get("handle"),
                 PasswordHashing(request.params.get("password").get.toCharArray)))
               insertUser <- PendingUserRecord.insertUser(pendingUser).asFinagle

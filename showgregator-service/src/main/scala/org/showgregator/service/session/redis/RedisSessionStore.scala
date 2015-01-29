@@ -37,6 +37,7 @@ object RedisSessionStore {
       case u:TransientUser => {
         kryo.writeObject(out, false)
         kryo.writeObject(out, u.email)
+        kryo.writeObject(out, u.userId)
       }
     }
     out.close()
@@ -60,7 +61,8 @@ object RedisSessionStore {
       User(uid, email, handle)
     } else {
       val email = kryo.readObject(input, classOf[String])
-      TransientUser(email)
+      val userId = kryo.readObject(input, classOf[UUID])
+      TransientUser(email, userId)
     }
     Session(id, user, t, t)
   }

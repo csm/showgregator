@@ -21,6 +21,8 @@ sealed class UserCalendarRecord extends CassandraTable[UserCalendarRecord, UserC
 }
 
 object UserCalendarRecord extends UserCalendarRecord with Connector {
+  override val tableName: String = "user_calendars"
+
   def insertCalendar(userCalendar: UserCalendar): Future[ResultSet] = {
     insert.value(_.user, userCalendar.user)
       .value(_.calendar, userCalendar.calendar)

@@ -26,7 +26,9 @@ sealed class PendingEmailChangeRecord extends CassandraTable[PendingEmailChangeR
     newToken(r), newEmail(r), newVerified(r), oldToken(r), oldEmail(r), oldVerified(r))
 }
 
-object PendingEmailChangeRecord extends PendingEmailChangeRecord with Connector
+object PendingEmailChangeRecord extends PendingEmailChangeRecord with Connector {
+  override val tableName: String = "pending_email_changes"
+}
 
 case class OldUserPendingEmailChange(oldToken: UUID, user: UUID)
 
@@ -37,7 +39,9 @@ sealed class OldUserPendingEmailChangeRecord extends CassandraTable[OldUserPendi
   override def fromRow(r: Row): OldUserPendingEmailChange = OldUserPendingEmailChange(oldToken(r), user(r))
 }
 
-object OldUserPendingEmailChangeRecord extends OldUserPendingEmailChangeRecord with Connector
+object OldUserPendingEmailChangeRecord extends OldUserPendingEmailChangeRecord with Connector {
+  override val tableName: String = "old_user_pending_email_changes"
+}
 
 case class NewUserPendingEmailChange(newToken: UUID, user: UUID)
 
@@ -48,4 +52,6 @@ sealed class NewUserPendingEmailChangeRecord extends CassandraTable[NewUserPendi
   override def fromRow(r: Row): NewUserPendingEmailChange = NewUserPendingEmailChange(newToken(r), user(r))
 }
 
-object NewUserPendingEmailChangeRecord extends NewUserPendingEmailChangeRecord with Connector
+object NewUserPendingEmailChangeRecord extends NewUserPendingEmailChangeRecord with Connector {
+  override val tableName: String = "new_user_pending_email_changes"
+}

@@ -14,4 +14,6 @@ sealed class PasswordChangeRecord extends CassandraTable[PasswordChangeRecord, P
   override def fromRow(r: Row): PasswordChange = PasswordChange(tokenId(r), user(r))
 }
 
-object PasswordChangeRecord extends PasswordChangeRecord with Connector
+object PasswordChangeRecord extends PasswordChangeRecord with Connector {
+  override val tableName: String = "password_change_tokens"
+}

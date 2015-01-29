@@ -11,9 +11,14 @@ import org.showgregator.core.ByteBuffers.AsByteArray
 import scala.concurrent.Future
 import com.websudos.phantom.Implicits._
 
-abstract class BaseUser(val email:String)
+/**
+ * BaseUser encompasses registered Users and unregistered TransientUsers.
+ * @param userId
+ * @param email
+ */
+abstract class BaseUser(val userId: UUID, val email:String)
 
-case class User(id: UUID, _email: String, handle: Option[String], hashedPassword: HashedPassword = null) extends BaseUser(_email) {
+case class User(id: UUID, _email: String, handle: Option[String], hashedPassword: HashedPassword = null) extends BaseUser(id, _email) {
   def withEmail(newEmail: String): User = {
     User(id, newEmail, handle, hashedPassword)
   }
@@ -116,6 +121,8 @@ object UserRecord extends UserRecord with Connector {
 }
 
 object UserEmailRecord extends UserEmailRecord with Connector {
+  override def tableName: String = "user_emails"
+
   def getByEmail(email: String)(implicit session:Session): Future[Option[UserEmail]] = {
     select.where(_.eid eqs email.toLowerCase).one()
   }
