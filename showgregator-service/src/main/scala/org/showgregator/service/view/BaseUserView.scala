@@ -15,4 +15,9 @@ abstract class BaseUserView(val user: BaseUser) extends View {
     case u:User => s"""<span id="logout">${user.email}<br><a href="/logout">Logout</a></span>"""
     case u:TransientUser => s"""<span id="logout">${user.email}<br><a href="/register/${u.id.toString}">Register</a></span>"""
   }
+
+  val navbar_links = user match {
+    case u:User => """<a href="/calendar/today">My Calendar</a> | <a href="/calendars">Shared Calendars</a> | <a href="/inbox">Messages</a>"""
+    case u:TransientUser => """<a href="/calendars">Shared Calendars</a>"""
+  }
 }

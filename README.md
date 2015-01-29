@@ -1,3 +1,13 @@
+Quickstart:
+
+1. Install cassandra and redis.
+
+    $ sbt
+    > project service
+    > ~ ;reStop ;compile; reStart
+
+Then, go to <http://localhost:7070>.
+
 Here's the idea:
 
 1. Start with shitty venue websites that list music performances. Build up a database of venues and their websites.

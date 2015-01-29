@@ -12,12 +12,7 @@ import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.io.{Input, Output}
 import scredis.serialization.{BytesWriter, BytesReader}
 
-/**
- * Session store on Redis.
- */
-class RedisSessionStore(redis: Redis, ttl: Duration = Duration.standardHours(1))(implicit context: ExecutionContext) extends SessionStore {
-
-  val DateFormatter = ISODateTimeFormat.basicDateTime()
+object RedisSessionStore {
   val kryo = new Kryo()
 
   def freezeSession(s:Session):Array[Byte] = {
@@ -43,6 +38,7 @@ class RedisSessionStore(redis: Redis, ttl: Duration = Duration.standardHours(1))
         kryo.writeObject(out, u.email)
       }
     }
+    out.close()
     bout.toByteArray
   }
 
@@ -66,6 +62,14 @@ class RedisSessionStore(redis: Redis, ttl: Duration = Duration.standardHours(1))
     }
     Session(id, user, t, t)
   }
+}
+
+/**
+ * Session store on Redis.
+ */
+class RedisSessionStore(redis: Redis, ttl: Duration = Duration.standardHours(1))(implicit context: ExecutionContext) extends SessionStore {
+  import RedisSessionStore._
+  val DateFormatter = ISODateTimeFormat.basicDateTime()
 
   implicit val reader = BytesReader
   def get(id: UUID): Future[Option[Session]] = {

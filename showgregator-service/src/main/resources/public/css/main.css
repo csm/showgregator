@@ -102,6 +102,14 @@ span#home-avatar {
 
 span#home-avatar img {
     float: left;
+    margin-right: 15pt;
     border: 1px solid white;
     border-radius: 5pt;
+}
+
+div.content div#top-navbar {
+    text-align: center;
+    border-bottom: 1pt solid black;
+    padding-bottom: 10pt;
+    margin-bottom: 10pt;
 }

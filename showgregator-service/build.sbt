@@ -1,5 +1,7 @@
 name := "showgregator-service"
 
+Revolver.settings
+
 mainClass in (Compile, run) := Some("org.showgregator.service.ShowgregatorServer")
 
 fork := true
