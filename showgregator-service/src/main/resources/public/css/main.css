@@ -95,3 +95,13 @@ span.macro a {
 span.macro a img {
     border: none;
 }
+
+span#home-avatar {
+    float: left;
+}
+
+span#home-avatar img {
+    float: left;
+    border: 1px solid white;
+    border-radius: 5pt;
+}

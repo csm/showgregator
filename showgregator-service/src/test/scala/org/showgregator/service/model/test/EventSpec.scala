@@ -1,16 +1,15 @@
 package org.showgregator.service.model.test
 
-import com.websudos.phantom.testing.{BaseTest, CassandraTest}
 import java.util.UUID
-import org.showgregator.service.model.{Permissions, Event, Connector, EventRecord}
+
+import com.websudos.phantom.testing.CassandraTest
+import org.joda.time.DateTime
+import org.scalatest.FlatSpec
+import org.showgregator.service.model.{Connector, Event, EventRecord, Permissions}
+
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.{ConfigMap, FlatSpec}
-import org.joda.time.DateTime
 
-@RunWith(classOf[JUnitRunner])
 class EventSpec extends FlatSpec with CassandraTest with Connector {
   override val keySpace = "showgregator_test_eventSpec"
 
@@ -35,6 +34,12 @@ class EventSpec extends FlatSpec with CassandraTest with Connector {
 
   override def beforeAll(): Unit = {
     super.beforeAll()
+    session.execute(s"CREATE KEYSPACE $keySpace WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};")
     Await.result(EventRecord.create.future(), 5.seconds)
+  }
+
+  override protected def afterAll(): Unit = {
+    super.afterAll()
+    session.execute(s"DROP KEYSPACE $keySpace;")
   }
 }

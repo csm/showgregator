@@ -7,10 +7,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import java.util.UUID
 import org.joda.time.DateTime
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
 class EventInCalendarSpec extends FlatSpec with CassandraTest with Connector {
   override val keySpace = "showgregator_test_eventsInCalendarSpec"
 
@@ -39,5 +36,9 @@ class EventInCalendarSpec extends FlatSpec with CassandraTest with Connector {
   override def beforeAll(): Unit = {
     super.beforeAll()
     Await.result(EventInCalendarRecord.create.future(), 5.seconds)
+  }
+
+  override protected def afterAll(): Unit = {
+    super.afterAll()
   }
 }

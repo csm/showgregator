@@ -1,7 +1,5 @@
 package org.showgregator.service.model.test
 
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 import org.showgregator.service.model.{Permissions, Calendar, CalendarRecord, Connector}
 import com.websudos.phantom.testing.CassandraTest
 import org.scalatest.{ConfigMap, FlatSpec}
@@ -9,14 +7,6 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import java.util.UUID
 
-/**
- * Created with IntelliJ IDEA.
- * User: cmarshall
- * Date: 1/23/15
- * Time: 8:53 PM
- * To change this template use File | Settings | File Templates.
- */
-@RunWith(classOf[JUnitRunner])
 class CalendarSpec extends FlatSpec with CassandraTest with Connector {
   override val keySpace = "showgregator_test_calendarSpec"
 
@@ -37,6 +27,12 @@ class CalendarSpec extends FlatSpec with CassandraTest with Connector {
 
   override def beforeAll(): Unit = {
     super.beforeAll()
+    session.execute(s"CREATE KEYSPACE $keySpace WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};")
     Await.result(CalendarRecord.create.future(), 5.seconds)
+  }
+
+  override protected def afterAll(): Unit = {
+    super.afterAll()
+    session.execute(s"DROP KEYSPACE $keySpace;")
   }
 }

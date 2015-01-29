@@ -2,10 +2,7 @@ package org.showgregator.service.model.test
 
 import org.scalatest.{Matchers, FlatSpec}
 import org.showgregator.service.model.CalendarMonth
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
 class CalendarMonthSpec extends FlatSpec with Matchers {
   "January 2015" should "span five weeks" in {
     val january = new CalendarMonth(2015, 1)

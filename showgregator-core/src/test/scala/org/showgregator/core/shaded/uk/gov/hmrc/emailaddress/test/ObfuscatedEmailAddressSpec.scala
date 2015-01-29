@@ -3,10 +3,7 @@ package org.showgregator.core.shaded.uk.gov.hmrc.emailaddress.test
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{Matchers, WordSpec}
 import org.showgregator.core.shaded.uk.gov.hmrc.emailaddress.ObfuscatedEmailAddress
-import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
 
-@RunWith(classOf[JUnitRunner])
 class ObfuscatedEmailAddressSpec extends WordSpec with Matchers with PropertyChecks with EmailAddressGenerators {
 
   "Obfuscating an email address" should {
