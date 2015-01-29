@@ -2,9 +2,9 @@ Quickstart:
 
 1. Install cassandra and redis.
 
-    $ sbt
-    > project service
-    > ~ ;reStop ;compile; reStart
+        $ sbt
+        > project service
+        > ~ ;reStop ;compile; reStart
 
 Then, go to <http://localhost:7070>.
 
