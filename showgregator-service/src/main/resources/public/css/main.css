@@ -49,6 +49,7 @@ div.main div.content {
     margin-bottom: 30pt;
     padding-left: 15%;
     padding-right: 15%;
+    min-height: 50%;
 }
 
 a {
