@@ -11,6 +11,16 @@
                 {{{ logout_links }}}
             </div>
             <div class="content">
+                <div class"calendar-nav">
+                    <span class="back">
+                        <a href="/calendar{{ calendar_self }}/{{ last_year_link }}">&x22D8; {{ last_year }}</a>
+                        <a href="/calendar{{ calendar_self }}/{{ last_month_link }}">&x226A; {{ last_month }}</a>
+                    </span>
+                    <span class="forward">
+                        <a href="/calendar{{ calendar_self }}/{{ next_month_link }}">{{ next_month }} &x226B;</a>
+                        <a href="/calendar{{ calendar_self }}/{{ next_year_link }}">{{ next_year }} &x22D9;</a>
+                    </span>
+                </div>
                 <ul class="day_names">
                     <li class="day_name">Monday</li>
                     <li class="day_name">Tuesday</li>

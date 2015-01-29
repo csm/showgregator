@@ -23,8 +23,8 @@ Here's the idea:
 
 ## Parts
 
-* showgregator-daemon -- scrapes configured sites for show information; pushes that to the service. Scala.
-* showgregator-service -- JSON REST service that handles input from the daemon, serves up user data to the frontend. Scala.
-* showgregator-web -- AngularJS front end, calls the service for data.
+* showgregator-core -- common stuff.
+* showgregator-daemon -- scrapes configured sites for show information; pushes that to the service.
+* showgregator-service -- Web service on Finatra that handles browsers, calendar apps, RSS apps, and the daemon.
 
 License: GNU Affero General Public License v3.
