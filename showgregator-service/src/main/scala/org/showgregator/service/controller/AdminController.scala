@@ -80,7 +80,7 @@ class AdminController(implicit val session: Session,
       UserRecord.getByID(id).asFinagle.flatMap({
         case Some(user) => if (request.params.get("email").isDefined) {
           User.updateUserEmail(user, request.params.get("email").get).asFinagle.flatMap({
-            case Some(_) => render.view(new EditUserView(user, "<strong>USER EMAIL CHANGED</strong>")).toFuture
+            case Some(edited) => render.view(new EditUserView(edited, "<strong>USER EMAIL CHANGED</strong>")).toFuture
             case None => render.view(new ServerErrorView("whups, failed to edit the user")).toFuture
           })
         } else if (request.params.get("handle").isDefined) {

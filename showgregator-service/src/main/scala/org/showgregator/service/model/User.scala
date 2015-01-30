@@ -1,7 +1,7 @@
 package org.showgregator.service.model
 
 import com.websudos.phantom.column.ModifiableColumn
-import org.showgregator.core.HashedPassword
+import org.showgregator.core.{PasswordHashing, HashedPassword}
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits.{IntColumn, BlobColumn, StringColumn}
 import com.websudos.phantom.keys.PartitionKey
@@ -95,6 +95,35 @@ object User {
       Some(user.withEmail(email))
     else
       None
+  }
+
+  def updateUserHandle(user: User, handle:Option[String]):Future[Option[User]] = {
+    UserRecord.update
+      .where(_.id eqs user.id)
+      .modify(_.handle setTo handle)
+      .future()
+      .map(rs => if (rs.wasApplied()) {
+        Some(User(user.id, user.email, handle, user.hashedPassword))
+      } else {
+        None
+      })
+  }
+
+  def updateUserPassword(user: User, password:Array[Char]):Future[Option[User]] = {
+    for {
+      hash <- Future(PasswordHashing(password))
+      update <- UserRecord.update
+        .where(_.id eqs user.id)
+        .modify(_.alg setTo hash.alg)
+        .and(_.iterations setTo hash.iterations)
+        .and(_.salt setTo ByteBuffer.wrap(hash.salt))
+        .and(_.hash setTo ByteBuffer.wrap(hash.hash))
+        .future()
+    } yield if (update.wasApplied()) {
+      Some(User(user.id, user.email, user.handle, hash))
+    } else {
+      None
+    }
   }
 }
 

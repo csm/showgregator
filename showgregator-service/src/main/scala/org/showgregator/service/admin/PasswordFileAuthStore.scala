@@ -29,21 +29,20 @@ class PasswordFileAuthStore(val file:File)(implicit val context: ExecutionContex
   }
 
   override def authenticate(user: String, password: String): Future[Option[AdminUser]] = {
-      users.get(user) match {
-        case Some(u) => {
-          val h = Base64.decodeBase64(u._2)
-          val s = Base64.decodeBase64(u._1)
-          val hash = PasswordHashing(password.toCharArray, salt = Some(s))
-          if (MessageDigest.isEqual(hash.hash, h)) {
-            Future.value(Some(new PasswordFileUser(u._3, user)))
-          } else {
-            Future.value(None)
-          }
-        }
-        case None => {
-          PasswordHashing(password.toCharArray)
+    users.get(user) match {
+      case Some(u) => {
+        val h = Base64.decodeBase64(u._2)
+        val s = Base64.decodeBase64(u._1)
+        val hash = PasswordHashing(password.toCharArray, salt = Some(s))
+        if (MessageDigest.isEqual(hash.hash, h)) {
+          Future.value(Some(new PasswordFileUser(u._3, user)))
+        } else {
           Future.value(None)
         }
+      }
+      case None => {
+        PasswordHashing(password.toCharArray)
+        Future.value(None)
       }
     }
   }
