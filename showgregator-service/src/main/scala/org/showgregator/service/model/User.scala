@@ -97,7 +97,7 @@ object User {
       None
   }
 
-  def updateUserHandle(user: User, handle:Option[String]):Future[Option[User]] = {
+  def updateUserHandle(user: User, handle:Option[String])(implicit session: Session): Future[Option[User]] = {
     UserRecord.update
       .where(_.id eqs user.id)
       .modify(_.handle setTo handle)
@@ -109,7 +109,7 @@ object User {
       })
   }
 
-  def updateUserPassword(user: User, password:Array[Char]):Future[Option[User]] = {
+  def updateUserPassword(user: User, password:Array[Char])(implicit session: Session): Future[Option[User]] = {
     for {
       hash <- Future(PasswordHashing(password))
       update <- UserRecord.update
