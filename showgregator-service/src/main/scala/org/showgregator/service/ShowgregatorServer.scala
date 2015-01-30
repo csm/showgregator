@@ -1,6 +1,7 @@
 package org.showgregator.service
 
 import com.twitter.finatra.FinatraServer
+import org.showgregator.service.admin.DefaultAdminAuthStore
 import org.showgregator.service.controller._
 import com.datastax.driver.core.Cluster
 import org.showgregator.service.session.{SessionStore, DefaultSessionStore}
@@ -45,4 +46,7 @@ object ShowgregatorServer extends FinatraServer {
   register(new VerifyEmailController)
   register(new UserController)
   register(new CalendarController)
+
+  implicit val adminStore = new DefaultAdminAuthStore
+  register(new AdminController)
 }

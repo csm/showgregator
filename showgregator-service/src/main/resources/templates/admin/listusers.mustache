@@ -1,0 +1,13 @@
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+    <a href="/admin/listusers?o={{ prevoffset }}">Prev</a> ~~~~~ <a href="/admin/listusers?o={{ nextoffset }}">Next</a>
+    <ul>
+        {{#users}}
+            <li>{{ email }} {{ handle }} {{ id }} (<a href="/admin/edituser/{{ id }}">edit</a>).</li>
+        {{/users}}
+    </ul>
+</body>
+</html>

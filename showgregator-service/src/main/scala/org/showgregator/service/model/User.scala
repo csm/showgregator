@@ -1,5 +1,6 @@
 package org.showgregator.service.model
 
+import com.websudos.phantom.column.ModifiableColumn
 import org.showgregator.core.HashedPassword
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits.{IntColumn, BlobColumn, StringColumn}
@@ -26,7 +27,7 @@ case class User(id: UUID, _email: String, handle: Option[String], hashedPassword
 
 sealed class UserRecord extends CassandraTable[UserRecord, User] {
   object id extends UUIDColumn(this) with PartitionKey[UUID]
-  object email extends StringColumn(this)
+  object email extends StringColumn(this) with PrimaryKey[String] with ClusteringOrder[String] with Ascending
   object handle extends OptionalStringColumn(this)
   object alg extends StringColumn(this)
   object salt extends BlobColumn(this)
@@ -61,13 +62,29 @@ object User {
 
   def updateUserEmail(user: User, email: String)(implicit session: Session): Future[Option[User]] = {
     for {
-      updateUser <- UserRecord.update.where(_.id eqs user.id)
-        .modify(_.email setTo email)
+      deleteOldUser <- UserRecord.delete
+        .where(_.id eqs user.id)
+        .and(_.email eqs user.email)
         .future()
-      deleteOld <- if (updateUser.wasApplied()) {
+        .map(_.wasApplied())
+      updateUser <- if (deleteOldUser) {
+        UserRecord.insert
+          .value(_.id, user.id)
+          .value(_.email, email)
+          .value(_.handle, user.handle)
+          .value(_.alg, user.hashedPassword.alg)
+          .value(_.salt, ByteBuffer.wrap(user.hashedPassword.salt))
+          .value(_.iterations, user.hashedPassword.iterations)
+          .value(_.hash, ByteBuffer.wrap(user.hashedPassword.hash))
+          .future()
+          .map(_.wasApplied())
+      } else {
+        Future.successful(false)
+      }
+      deleteOld <- if (updateUser) {
         UserEmailRecord.delete.where(_.eid eqs user.email.toLowerCase).future().map(_.wasApplied())
       } else Future.successful(false)
-      insertNew <- if (updateUser.wasApplied()) {
+      insertNew <- if (updateUser) {
         UserEmailRecord.insert.value(_.eid, email.toLowerCase)
           .value(_.email, email)
           .value(_.id, user.id)
