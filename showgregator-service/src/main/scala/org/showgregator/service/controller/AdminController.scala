@@ -78,15 +78,21 @@ class AdminController(implicit val session: Session,
     !!!(new EditUserPermission)(_) { request =>
       val id = UUID.fromString(request.routeParams.get("id").get)
       UserRecord.getByID(id).asFinagle.flatMap({
-        case Some(user) => if (request.params.get("email").isDefined) {
+        case Some(user) => if (nonEmpty(request.params.get("email"))) {
           User.updateUserEmail(user, request.params.get("email").get).asFinagle.flatMap({
             case Some(edited) => render.view(new EditUserView(edited, "<strong>USER EMAIL CHANGED</strong>")).toFuture
             case None => render.view(new ServerErrorView("whups, failed to edit the user")).toFuture
           })
         } else if (request.params.get("handle").isDefined) {
-          throw new UnsupportedOperationException("not yet implemented")
-        } else if (request.params.get("password").isDefined) {
-          throw new UnsupportedOperationException("not yet implemented")
+          User.updateUserHandle(user, strParam(request.params.get("handle"))).asFinagle.flatMap({
+            case Some(edited) => render.view(new EditUserView(edited, "<strong>USER HANDLE CHANGED</strong>")).toFuture
+            case None => render.view(new ServerErrorView("whups, failed to edit the user")).toFuture
+          })
+        } else if (nonEmpty(request.params.get("password"))) {
+          User.updateUserPassword(user, request.params.get("password").get.toCharArray).asFinagle.flatMap({
+            case Some(edited) => render.view(new EditUserView(edited, "<strong>USER PASSWORD CHANGED</strong>")).toFuture
+            case None => render.view(new ServerErrorView("whups, failed to edit the user")).toFuture
+          })
         } else {
           render.view(new EditUserView(user)).toFuture
         }

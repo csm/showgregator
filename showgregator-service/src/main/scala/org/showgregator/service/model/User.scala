@@ -1,6 +1,5 @@
 package org.showgregator.service.model
 
-import com.websudos.phantom.column.ModifiableColumn
 import org.showgregator.core.{PasswordHashing, HashedPassword}
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits.{IntColumn, BlobColumn, StringColumn}
@@ -100,6 +99,7 @@ object User {
   def updateUserHandle(user: User, handle:Option[String])(implicit session: Session): Future[Option[User]] = {
     UserRecord.update
       .where(_.id eqs user.id)
+      .and(_.email eqs user.email)
       .modify(_.handle setTo handle)
       .future()
       .map(rs => if (rs.wasApplied()) {
@@ -114,6 +114,7 @@ object User {
       hash <- Future(PasswordHashing(password))
       update <- UserRecord.update
         .where(_.id eqs user.id)
+        .and(_.email eqs user.email)
         .modify(_.alg setTo hash.alg)
         .and(_.iterations setTo hash.iterations)
         .and(_.salt setTo ByteBuffer.wrap(hash.salt))

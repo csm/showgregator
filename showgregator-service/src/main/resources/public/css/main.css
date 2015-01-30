@@ -12,11 +12,12 @@ body {
 
 div.main {
     box-sizing: border-box;
-    position: relative;
+    /*position: relative;*/
     padding-top: 0pt;
     margin: 0pt;
     /* padding-top: 5%; */
     min-height: 100%;
+    margin-bottom: -50pt;
 }
 
 div.main div.title {
@@ -72,13 +73,22 @@ span.error a {
     color: red;
 }
 
-div.main div.footer {
+div.main:after {
+    content: "";
+    display: block;
+}
+
+/*div.main*/
+footer, div.main:after {
     height: 50pt;
+}
+
+footer {
     font-size: small;
-    width: 100%;
-    position: absolute;
-    bottom: 0;
-    left: 0;
+    /*width: 100%;*/
+    /*position: absolute;*/
+    /*bottom: 0;*/
+    /*left: 0;*/
     color: white;
     background-color: black;
     padding-top: 20pt;
@@ -87,7 +97,7 @@ div.main div.footer {
     padding-right: 15%;
 }
 
-div.main div.footer a {
+footer a {
     color: white;
 }
 
