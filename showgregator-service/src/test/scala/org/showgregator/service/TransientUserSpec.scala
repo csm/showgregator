@@ -44,6 +44,7 @@ class TransientUserSpec extends FlatSpec with Matchers with BeforeAndAfterAll {
     val response = loginApp.get(s"/landing/$transientId?then=/someplace/new")
     response.status should be (HttpResponseStatus.FOUND)
     response.getHeader("location") should be ("/someplace/new")
+    response.getHeader("set-cookie").indexOf("SessionId=") should be >= 0
   }
 
   override protected def afterAll(): Unit = {
