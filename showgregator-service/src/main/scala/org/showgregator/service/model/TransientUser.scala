@@ -4,7 +4,7 @@ import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import com.websudos.phantom.keys.PartitionKey
 import com.datastax.driver.core.Row
-import scala.concurrent.Future
+import com.twitter.util.Future
 
 case class TransientUser(_email: String,
                          _userId: UUID,
@@ -12,8 +12,11 @@ case class TransientUser(_email: String,
   extends BaseUser(_userId, _email)
 
 object TransientUser {
-  def insertUser(user: TransientUser)(implicit session:Session): Future[(ResultSet, ResultSet)] = {
-    TransientUserRecord.insertUser(user).zip(ReverseTransientUserRecord.insertUser(user))
+  def insertUser(user: TransientUser)(implicit session:Session): Future[ResultSet] = {
+    val batch = BatchStatement()
+    batch.add(TransientUserRecord.prepareInsert(user))
+    batch.add(ReverseTransientUserRecord.prepareInsert(user))
+    batch.execute()
   }
 }
 
@@ -37,27 +40,39 @@ object TransientUserRecord extends TransientUserRecord with Connector {
   override val tableName = "transient_users"
 
   def forEmail(email: String)(implicit session:Session): Future[Option[TransientUser]] = {
-    select.where(_.eid eqs email.toLowerCase).one()
+    select.where(_.eid eqs email.toLowerCase).get()
   }
 
   def insertUser(user: TransientUser)(implicit session:Session): Future[ResultSet] = {
+    prepareInsert(user)
+      .execute()
+  }
+
+  def prepareInsert(user: TransientUser) = {
     insert.value(_.eid, user.email.toLowerCase)
       .value(_.email, user.email)
       .value(_.id, user.id)
-      .future()
   }
+
+  def prepareDelete(email: String) = delete.where(_.eid eqs email.toLowerCase)
 }
 
 object ReverseTransientUserRecord extends ReverseTransientUserRecord with Connector {
   override val tableName = "reverse_transient_users"
 
   def forUuid(id: UUID)(implicit session:Session): Future[Option[TransientUser]] = {
-    select.where(_.id eqs id).one()
+    select.where(_.id eqs id).get()
   }
 
   def insertUser(user: TransientUser)(implicit session:Session): Future[ResultSet] = {
+    prepareInsert(user)
+      .execute()
+  }
+
+  def prepareInsert(user: TransientUser) = {
     insert.value(_.email, user.email)
       .value(_.id, user.id)
-      .future()
   }
+
+  def prepareDelete(id: UUID) = delete.where(_.id eqs id)
 }

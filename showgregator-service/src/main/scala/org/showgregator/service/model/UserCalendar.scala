@@ -5,7 +5,7 @@ import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import com.websudos.phantom.keys.PartitionKey
 
-import scala.concurrent.Future
+import com.twitter.util.Future
 
 case class UserCalendar(user: UUID, calendar: UUID) {
   def getCalendar(implicit session: Session): Future[Option[Calendar]] = {
@@ -26,10 +26,15 @@ object UserCalendarRecord extends UserCalendarRecord with Connector {
   def insertCalendar(userCalendar: UserCalendar): Future[ResultSet] = {
     insert.value(_.user, userCalendar.user)
       .value(_.calendar, userCalendar.calendar)
-      .future()
+      .execute()
   }
 
   def getCalendar(user: UUID): Future[Option[UserCalendar]] = {
-    select.where(_.user eqs user).one()
+    select.where(_.user eqs user).get()
+  }
+
+  def prepareInsert(userCalendar: UserCalendar) = {
+    insert.value(_.user, userCalendar.user)
+      .value(_.calendar, userCalendar.calendar)
   }
 }

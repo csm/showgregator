@@ -4,8 +4,8 @@ import java.util.UUID
 
 import com.datastax.driver.core.Session
 import org.showgregator.core.PasswordHashing
-import org.showgregator.service.admin.{EditUserPermission, ReadPermission, AddUserPermission, AdminAuthStore}
-import org.showgregator.service.model.{UserRecord, User}
+import org.showgregator.service.admin._
+import org.showgregator.service.model._
 import org.showgregator.service.finagle.FinagleFutures.ScalaFutureWrapper
 import org.showgregator.service.view.{ServerErrorView, NotFoundView}
 import org.showgregator.service.view.admin.{EditUserView, ListUsersView, AddedUserView}
@@ -28,7 +28,7 @@ class AdminController(implicit val session: Session,
     !!!(new ReadPermission)(_) { request =>
       val offset = request.params.get("o")
       val future = if (offset.isDefined) {
-        UserRecord.select.allowFiltering.where(_.email gte offset.get).limit(50).fetch().asFinagle
+        UserRecord.select.allowFiltering().where(_.email gte offset.get).limit(50).fetch().asFinagle
       } else {
         UserRecord.select.limit(50).fetch().asFinagle
       }
@@ -52,14 +52,11 @@ class AdminController(implicit val session: Session,
       val email = request.params.get("email").map(_.trim)
       val password = request.params.get("password")
       if (nonEmpty(email) && nonEmpty(password)) {
-        val user = User(UUID.randomUUID(), email.get, strParam(request.params.get("handle")),
-          PasswordHashing(password.get.toCharArray))
-        UserRecord.insertUser(user).asFinagle.flatMap(rs =>
-          if (rs.wasApplied())
-            render.view(new AddedUserView(user.id)).toFuture
-          else
-            throw new IllegalArgumentException
-        )
+        User.createUser(UUID.randomUUID(), email.get, strParam(request.params.get("handle")), password.get.toCharArray)
+          .flatMap({
+            case Some(user) => render.view(new AddedUserView(user.id)).toFuture
+            case None => throw new IllegalArgumentException
+          })
       } else throw new IllegalArgumentException
     }
   }
@@ -67,7 +64,7 @@ class AdminController(implicit val session: Session,
   get("/admin/edituser/:id") {
     !!!(new EditUserPermission)(_) { request =>
       val id = UUID.fromString(request.routeParams.get("id").get)
-      UserRecord.getByID(id).asFinagle.flatMap({
+      UserRecord.getByID(id).flatMap({
         case Some(user) => render.view(new EditUserView(user)).toFuture
         case None => render.view(new NotFoundView(s"user $id")).notFound.toFuture
       })
@@ -77,19 +74,19 @@ class AdminController(implicit val session: Session,
   post("/admin/edituser/:id") {
     !!!(new EditUserPermission)(_) { request =>
       val id = UUID.fromString(request.routeParams.get("id").get)
-      UserRecord.getByID(id).asFinagle.flatMap({
+      UserRecord.getByID(id).flatMap({
         case Some(user) => if (nonEmpty(request.params.get("email"))) {
-          User.updateUserEmail(user, request.params.get("email").get).asFinagle.flatMap({
+          User.updateUserEmail(user, request.params.get("email").get).flatMap({
             case Some(edited) => render.view(new EditUserView(edited, "<strong>USER EMAIL CHANGED</strong>")).toFuture
             case None => render.view(new ServerErrorView("whups, failed to edit the user")).toFuture
           })
         } else if (request.params.get("handle").isDefined) {
-          User.updateUserHandle(user, strParam(request.params.get("handle"))).asFinagle.flatMap({
+          User.updateUserHandle(user, strParam(request.params.get("handle"))).flatMap({
             case Some(edited) => render.view(new EditUserView(edited, "<strong>USER HANDLE CHANGED</strong>")).toFuture
             case None => render.view(new ServerErrorView("whups, failed to edit the user")).toFuture
           })
         } else if (nonEmpty(request.params.get("password"))) {
-          User.updateUserPassword(user, request.params.get("password").get.toCharArray).asFinagle.flatMap({
+          User.updateUserPassword(user, request.params.get("password").get.toCharArray).flatMap({
             case Some(edited) => render.view(new EditUserView(edited, "<strong>USER PASSWORD CHANGED</strong>")).toFuture
             case None => render.view(new ServerErrorView("whups, failed to edit the user")).toFuture
           })
@@ -98,6 +95,24 @@ class AdminController(implicit val session: Session,
         }
         case None => render.view(new NotFoundView(s"user $id")).notFound.toFuture
       })
+    }
+  }
+
+  post("/admin/deleteuser/:id") {
+    !!!(new DeleteUserPermission)(_) { request =>
+      throw new UnsupportedOperationException("not yet implemented")
+    }
+  }
+
+  get("/admin/addpending") {
+    !!!(new AddPendingUserPermission)(_) { request =>
+      render.static("html/admin/addpending.html").toFuture
+    }
+  }
+
+  get("/admin/addtransient") {
+    !!!(new AddPendingUserPermission)(_) { request =>
+      render.static("html/admin/addtransient.html").toFuture
     }
   }
 

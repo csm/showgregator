@@ -4,7 +4,7 @@ import java.text.DateFormatSymbols
 
 import org.joda.time.DateTime
 import com.twitter.finatra.View
-import org.showgregator.service.model.{TransientUser, User, BaseUser}
+import org.showgregator.service.model._
 
 /**
  * Created with IntelliJ IDEA.
@@ -13,7 +13,7 @@ import org.showgregator.service.model.{TransientUser, User, BaseUser}
  * Time: 10:11 PM
  * To change this template use File | Settings | File Templates.
  */
-class MonthView(val date:DateTime, val month: String, val year: Int, weekList: List[List[DateTime]], user: BaseUser) extends BaseUserView(user) {
+class MonthView(val date:DateTime, val month: String, val year: Int, weekList: List[List[DateTime]], user: BaseUser, calendar: Calendar, events: Seq[EventInCalendar]) extends BaseUserView(user) {
   def template: String = "templates/month.mustache"
 
   private val lastYear = date.minusYears(1)

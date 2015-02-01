@@ -5,7 +5,7 @@ import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import com.websudos.phantom.keys.{Ascending, ClusteringOrder, PrimaryKey, PartitionKey}
 import com.datastax.driver.core.Row
-import scala.concurrent.Future
+import com.twitter.util.Future
 
 // a comment's threadReplyId is a combination of two values:
 // a thread ID (the upper four bytes) and a reply ID
@@ -42,19 +42,20 @@ object EventCommentRecord extends EventCommentRecord with Connector {
     select.where(_.event eqs event)
       .orderBy(_.thread.desc)
       .orderBy(_.reply.desc)
-      .fetch()
+      .collect()
   }
 
   def nextThreadId(event: UUID)(implicit session:Session): Future[Int] = {
     select.where(_.event eqs event)
-      .one()
+      .get()
       .map(r => r.map(_.thread).getOrElse(0))
   }
 
   def nextReplyId(event: UUID, thread: Int)(implicit session:Session): Future[Int] = {
     select.where(_.event eqs event)
       .and(_.thread eqs thread)
-      .one().map(r => r.map(_.reply).getOrElse(0))
+      .get()
+      .map(r => r.map(_.reply).getOrElse(0))
   }
 
   def insertComment(comment: EventComment)(implicit session:Session): Future[ResultSet] = {
@@ -67,7 +68,7 @@ object EventCommentRecord extends EventCommentRecord with Connector {
       .value(_.date, comment.date)
       .value(_.comment, comment.comment)
       .value(_.isDeleted, comment.isDeleted)
-      .future()
+      .execute()
   }
 
   /**
@@ -89,6 +90,6 @@ object EventCommentRecord extends EventCommentRecord with Connector {
       .value(_.date, None)
       .value(_.comment, None)
       .value(_.isDeleted, true)
-      .future()
+      .execute()
   }
 }

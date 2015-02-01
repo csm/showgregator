@@ -6,7 +6,7 @@ import java.util.UUID
 import com.twitter.util.Future
 import org.showgregator.service.model.{PendingUserRecord, PendingUser}
 import org.showgregator.service.finagle.FinagleFutures.ScalaFutureWrapper
-import org.showgregator.service.view.{SuccessfulValidationView, ForbiddenView}
+import org.showgregator.service.view.{ServerErrorView, SuccessfulValidationView, ForbiddenView}
 
 /**
  * Created with IntelliJ IDEA.
@@ -19,14 +19,16 @@ class VerifyEmailController(implicit override val session: Session, override val
   get("/verify/:token") { request =>
     for {
       tokenId <- Future(UUID.fromString(request.routeParams.get("token").get))
-      token <- PendingUserRecord.getPendingUser(tokenId).asFinagle
-      validated <- token match {
-        case Some(t) => PendingUserRecord.verifyUser(t.id).asFinagle
-        case None => Future(false)
-      }
-      response <- validated match {
-        case true => render.view(new SuccessfulValidationView(token.get.email)).toFuture
-        case false => render.view(new ForbiddenView("Invalid token.")).status(403).toFuture
+      token <- PendingUserRecord.getPendingUser(tokenId)
+      response <- token match {
+        case Some(t) => PendingUserRecord.verifyUser(t.id).flatMap({
+          case true => render.view(new SuccessfulValidationView(t.email)).toFuture
+          case false => {
+            log.error("failed to validate email! token: %s", t)
+            render.view(new ServerErrorView("something failed internally, sorry")).status(500).toFuture
+          }
+        })
+        case None => render.view(new ForbiddenView("Invalid token.")).status(403).toFuture
       }
     } yield response
   }

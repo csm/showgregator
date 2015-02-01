@@ -18,3 +18,12 @@ Data model (WIP)
     * Name
     * Date and time
     * Venue ID
+
+## User Flow
+
+* Register token (link to register)
+    * Register creates pending user, deletes register token (confirm email sent). Has TTL.
+        * Confirming email creates user, deletes pending user.
+* Transient user (invited via other user)
+    * Register creates pending user (confirm email sent). Has TTL.
+        * Confirming email creates user, deletes pending user, transient user.

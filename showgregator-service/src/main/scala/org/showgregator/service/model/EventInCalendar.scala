@@ -4,7 +4,7 @@ import org.joda.time._
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.keys.{Descending => KeysDescending, ClusteringOrder, PartitionKey}
 import com.websudos.phantom.column.DateTimeColumn
-import scala.concurrent.Future
+import com.twitter.util.Future
 import com.websudos.phantom.Implicits._
 
 case class EventInCalendar(calendar: UUID, event: UUID, when: DateTime, title: String, starCount: Long = 0) {
@@ -34,10 +34,10 @@ object EventInCalendarRecord extends EventInCalendarRecord with Connector {
     select.where(_.calendar eqs calendarId)
       .and(_.when gte fromDate)
       .and(_.when lte toDate)
-      .fetch()
+      .collect()
   }
 
-  def insertEvent(event: EventInCalendar, ttl: Duration = Days.days(60).toStandardDuration): Future[Option[ResultSet]] = {
+  def insertEvent(event: EventInCalendar, ttl: Duration = Days.days(60).toStandardDuration): Future[Boolean] = {
     val eventTtl = new Duration(DateTime.now(), event.when.plus(ttl)).toStandardSeconds.getSeconds
     if (eventTtl > 0) {
       insert.value(_.calendar, event.calendar)
@@ -45,8 +45,8 @@ object EventInCalendarRecord extends EventInCalendarRecord with Connector {
         .value(_.when, event.when)
         .value(_.title, event.title)
         .ttl(eventTtl)
-        .future()
-        .map(Some(_))
-    } else Future.successful(None)
+        .execute()
+        .map(_.wasApplied())
+    } else Future.value(false)
   }
 }

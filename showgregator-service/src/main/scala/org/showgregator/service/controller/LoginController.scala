@@ -44,13 +44,13 @@ class LoginController(implicit val sessionStore: SessionStore,
     (request.params.get("email"), request.params.get("password")) match {
       case (Some(email), Some(password)) => {
         for {
-          user:Option[User] <- UserRecord.getByEmail(email).asFinagle
+          user:Option[User] <- UserRecord.getByEmail(email)
           reversePendingUser <- if (user.isEmpty)
-            ReversePendingUserRecord.getByEmail(email).asFinagle
+            ReversePendingUserRecord.getByEmail(email)
           else
             Future.value(None)
           pendingUser <- if (reversePendingUser.isDefined)
-            PendingUserRecord.getPendingUser(reversePendingUser.get.token).asFinagle
+            PendingUserRecord.getPendingUser(reversePendingUser.get.token)
           else
             Future.value(None)
           hashedPassword <- (user, pendingUser) match {
@@ -119,11 +119,11 @@ class LoginController(implicit val sessionStore: SessionStore,
         case Some(sid) => sessionStore.get(sid).asFinagle
         case None => Future.value(None)
       }
-      pendingUser:Option[TransientUser] <- uuid match {
-        case Some(uid) => ReverseTransientUserRecord.forUuid(uid).asFinagle
+      transientUser:Option[TransientUser] <- uuid match {
+        case Some(uid) => ReverseTransientUserRecord.forUuid(uid)
         case None => Future.value(None)
       }
-      response:ResponseBuilder <- (pendingUser, userSession) match {
+      response:ResponseBuilder <- (transientUser, userSession) match {
           // There is a valid session and a user, match the session to the user.
         case (Some(user), Some(sess)) => {
           log.debug("matching user %s with session %s", user, sess)

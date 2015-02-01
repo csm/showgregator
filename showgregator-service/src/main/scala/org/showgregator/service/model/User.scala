@@ -1,5 +1,8 @@
 package org.showgregator.service.model
 
+import java.util.UUID
+
+import com.websudos.phantom.query.{InsertQuery, BatchableQuery}
 import org.showgregator.core.{PasswordHashing, HashedPassword}
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits.{IntColumn, BlobColumn, StringColumn}
@@ -8,7 +11,7 @@ import com.datastax.driver.core.Row
 import java.nio.ByteBuffer
 
 import org.showgregator.core.ByteBuffers.AsByteArray
-import scala.concurrent.Future
+import com.twitter.util.Future
 import com.websudos.phantom.Implicits._
 
 /**
@@ -38,62 +41,83 @@ sealed class UserRecord extends CassandraTable[UserRecord, User] {
 }
 
 object User {
-  def insertUser(user: User)(implicit session: Session): Future[Boolean] = {
-    for {
-      insertUser <- UserRecord.insert.ifNotExists()
-        .value(_.id, user.id)
-        .value(_.email, user.email)
-        .value(_.handle, user.handle)
-        .value(_.alg, user.hashedPassword.alg)
-        .value(_.salt, ByteBuffer.wrap(user.hashedPassword.salt))
-        .value(_.iterations, user.hashedPassword.iterations)
-        .value(_.hash, ByteBuffer.wrap(user.hashedPassword.hash))
-        .future()
-      insertEmail <- if(insertUser.wasApplied()) {
-        UserEmailRecord.insert
-          .value(_.email, user.email)
-          .value(_.id, user.id)
-          .future()
-          .map(rs => rs.wasApplied())
-      } else Future.successful(false)
-    } yield insertEmail
+  val NullId = new UUID(0, 0)
+
+  def prepareCreate(batch: BatchStatement, user: User, calendar: Calendar) = {
+    batch
+      .add(prepareInsert(user))
+      .add(UserEmailRecord.prepareInsert(UserEmail(user.email, user.userId)))
+      .add(CalendarRecord.prepareInsert(calendar))
+      .add(UserCalendarRecord.prepareInsert(UserCalendar(user.userId, calendar.id)))
   }
 
-  def updateUserEmail(user: User, email: String)(implicit session: Session): Future[Option[User]] = {
+  def createUser(id: UUID, email: String, handle: Option[String], password: Array[Char])(implicit session: Session): Future[Option[User]] = {
+    val calendar = Calendar(UUID.randomUUID(), "", Map(id -> (CalendarPermissions.AllPermission & ~CalendarPermissions.Share)))
     for {
-      deleteOldUser <- UserRecord.delete
-        .where(_.id eqs user.id)
-        .and(_.email eqs user.email)
-        .future()
-        .map(_.wasApplied())
-      updateUser <- if (deleteOldUser) {
-        UserRecord.insert
-          .value(_.id, user.id)
-          .value(_.email, email)
-          .value(_.handle, user.handle)
-          .value(_.alg, user.hashedPassword.alg)
-          .value(_.salt, ByteBuffer.wrap(user.hashedPassword.salt))
-          .value(_.iterations, user.hashedPassword.iterations)
-          .value(_.hash, ByteBuffer.wrap(user.hashedPassword.hash))
-          .future()
-          .map(_.wasApplied())
-      } else {
-        Future.successful(false)
+      user <- Future(User(id, email, handle, PasswordHashing(password)))
+      insertBatch <- {
+        val batch = BatchStatement()
+        prepareCreate(batch, user, calendar)
+        batch.execute()
       }
-      deleteOld <- if (updateUser) {
-        UserEmailRecord.delete.where(_.eid eqs user.email.toLowerCase).future().map(_.wasApplied())
-      } else Future.successful(false)
-      insertNew <- if (updateUser) {
-        UserEmailRecord.insert.value(_.eid, email.toLowerCase)
-          .value(_.email, email)
-          .value(_.id, user.id)
-          .future()
-          .map(_.wasApplied())
-      } else Future.successful(false)
-    } yield if (insertNew)
-      Some(user.withEmail(email))
+    } yield if (insertBatch.wasApplied())
+      Some(user)
     else
       None
+  }
+
+  def prepareInsert(user: User) = {
+    UserRecord
+      .insert
+      .ifNotExists()
+      .value(_.id, user.id)
+      .value(_.email, user.email)
+      .value(_.handle, user.handle)
+      .value(_.alg, user.hashedPassword.alg)
+      .value(_.iterations, user.hashedPassword.iterations)
+      .value(_.salt, ByteBuffer.wrap(user.hashedPassword.salt))
+      .value(_.hash, ByteBuffer.wrap(user.hashedPassword.hash))
+  }
+
+  def prepareDelete(id: UUID, email: String) = {
+    UserRecord
+      .delete
+      .where(_.id eqs id)
+      .and(_.email eqs email)
+  }
+
+  def insertUser(user: User)(implicit session: Session): Future[Boolean] = {
+    prepareInsert(user).execute().map(_.wasApplied())
+  }
+
+  /**
+   * Update a user's email address.
+   *
+   * Performs the following steps:
+   * 1. deletes the existing user object.
+   * 2. inserts a new user with a different email.
+   * 3. deletes the old email -> id mapping.
+   * 4. inserts the new email -> id mapping.
+   *
+   * @param user The existing user.
+   * @param email The new email.
+   * @param session The session.
+   * @return A future that will contain the updated user if the statements were applied.
+   */
+  def updateUserEmail(user: User, email: String)(implicit session: Session): Future[Option[User]] = {
+    val updated = User(user.userId, email, user.handle, user.hashedPassword)
+    BatchStatement()
+      .add(prepareDelete(user.userId, user.email))
+      .add(prepareInsert(updated))
+      .add(UserEmailRecord.prepareDelete(user.email))
+      .add(UserEmailRecord.prepareInsert(UserEmail(email, user.userId)))
+      .execute()
+      .map(rs => {
+        if (rs.wasApplied())
+          Some(updated)
+        else
+          None
+      })
   }
 
   def updateUserHandle(user: User, handle:Option[String])(implicit session: Session): Future[Option[User]] = {
@@ -101,7 +125,7 @@ object User {
       .where(_.id eqs user.id)
       .and(_.email eqs user.email)
       .modify(_.handle setTo handle)
-      .future()
+      .execute()
       .map(rs => if (rs.wasApplied()) {
         Some(User(user.id, user.email, handle, user.hashedPassword))
       } else {
@@ -119,7 +143,7 @@ object User {
         .and(_.iterations setTo hash.iterations)
         .and(_.salt setTo ByteBuffer.wrap(hash.salt))
         .and(_.hash setTo ByteBuffer.wrap(hash.hash))
-        .future()
+        .execute()
     } yield if (update.wasApplied()) {
       Some(User(user.id, user.email, user.handle, hash))
     } else {
@@ -146,24 +170,17 @@ object UserRecord extends UserRecord with Connector {
       userEmail <- UserEmailRecord.getByEmail(email)
       user <- userEmail match {
         case Some(ue) => getByID(ue.id)
-        case None => Future.successful(None)
+        case None => Future.value(None)
       }
     } yield user
   }
 
   def getByID(id: UUID)(implicit session:Session): Future[Option[User]] = {
-    select.where(_.id eqs id).one()
+    select.where(_.id eqs id).get()
   }
 
   def insertUser(user: User)(implicit session:Session): Future[ResultSet] = {
-    insert.value(_.id, user.id)
-      .value(_.email, user.email)
-      .value(_.handle, user.handle)
-      .value(_.alg, user.hashedPassword.alg)
-      .value(_.salt, ByteBuffer.wrap(user.hashedPassword.salt))
-      .value(_.iterations, user.hashedPassword.iterations)
-      .value(_.hash, ByteBuffer.wrap(user.hashedPassword.hash))
-      .future()
+    User.prepareInsert(user).execute()
   }
 }
 
@@ -171,13 +188,25 @@ object UserEmailRecord extends UserEmailRecord with Connector {
   override def tableName: String = "user_emails"
 
   def getByEmail(email: String)(implicit session:Session): Future[Option[UserEmail]] = {
-    select.where(_.eid eqs email.toLowerCase).one()
+    select.where(_.eid eqs email.toLowerCase).get()
   }
 
   def insertUserEmail(userEmail: UserEmail)(implicit session: Session): Future[ResultSet] = {
-    insert.value(_.eid, userEmail.email.toLowerCase)
+    prepareInsert(userEmail).execute()
+  }
+
+  def prepareInsert(userEmail: UserEmail) = {
+    UserEmailRecord
+      .insert
+      .ifNotExists()
+      .value(_.eid, userEmail.email.toLowerCase)
       .value(_.email, userEmail.email)
       .value(_.id, userEmail.id)
-      .future()
+  }
+
+  def prepareDelete(email: String) = {
+    UserEmailRecord
+      .delete
+      .where(_.eid eqs email.toLowerCase)
   }
 }

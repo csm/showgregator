@@ -8,7 +8,7 @@ import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits.{StringColumn, UUIDColumn}
 import com.websudos.phantom.keys.{Descending, ClusteringOrder, PartitionKey}
 import com.websudos.phantom.column.{MapColumn, DateTimeColumn}
-import scala.concurrent.Future
+import com.twitter.util.Future
 import com.websudos.phantom.Implicits._
 
 case class Event(id: UUID,
@@ -35,7 +35,7 @@ object EventRecord extends EventRecord with Connector {
   override val tableName = "events"
 
   def getById(id: UUID)(implicit session:Session): Future[Option[Event]] = {
-    select.where(_.id eqs id).one()
+    select.where(_.id eqs id).get()
   }
 
   /**
@@ -61,10 +61,10 @@ object EventRecord extends EventRecord with Connector {
         .value(_.info, event.info)
         .value(_.acl, event.acl)
         .ttl(ttlSeconds)
-        .future()
+        .execute()
         .map(rs => Some(rs))
     } else {
-      Future.successful(None)
+      Future.value(None)
     }
   }
 }
