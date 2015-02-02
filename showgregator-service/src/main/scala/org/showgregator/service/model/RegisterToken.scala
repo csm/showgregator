@@ -43,4 +43,11 @@ object RegisterTokenRecord extends RegisterTokenRecord with Connector {
     else
       None
   }
+
+  def insertToken(token: RegisterToken)(implicit session: Session): Future[ResultSet] = {
+    insert
+      .value(_.id, token.token)
+      .value(_.email, token.email)
+      .execute()
+  }
 }

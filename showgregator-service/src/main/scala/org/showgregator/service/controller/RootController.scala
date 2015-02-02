@@ -18,6 +18,10 @@ class RootController extends ControllerBase {
       .toFuture
   }
 
+  get("/ping") { request =>
+    render.plain("OK").ok.toFuture
+  }
+
   get("/css/:stylesheet") { request =>
     render
       .static(s"/css/${request.routeParams.get("stylesheet")}")

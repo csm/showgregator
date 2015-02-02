@@ -43,7 +43,7 @@ class RegisterController(implicit override val session:Session, override val con
       token:Option[RegisterToken] <- RegisterTokenRecord.findToken(tokenId)
       response:ResponseBuilder <- token match {
         case Some(t) => render.view(new RegisterView(Some(t.token.toString), t.email.getOrElse(""))).toFuture
-        case None => render.view(new ForbiddenView("Invalid token.")).status(403).toFuture
+        case None => render.view(new ForbiddenView("Invalid token.")).forbidden.toFuture
       }
     } yield response
   }
@@ -64,11 +64,11 @@ class RegisterController(implicit override val session:Session, override val con
           case Some(u) => render.view(new SuccessfulRegisterView(u.email)).toFuture
           case None => {
             log.error("failed to take register token %s", t)
-            render.view(new ServerErrorView("Internal error. Please try again later.")).toFuture
+            render.view(new ServerErrorView("Internal error. Please try again later.")).internalServerError.toFuture
           }
         })
-        case (c, None) if c.valid => render.view(new ForbiddenView("Invalid token.")).toFuture
-        case (c, _) => render.view(new BadRequestView(c.message)).toFuture
+        case (c, None) if c.valid => render.view(new ForbiddenView("Invalid token.")).forbidden.toFuture
+        case (c, _) => render.view(new BadRequestView(c.message)).badRequest.toFuture
       }
     } yield taken
   }
