@@ -69,7 +69,7 @@ object User {
   def prepareInsert(user: User) = {
     UserRecord
       .insert
-      .ifNotExists()
+      //.ifNotExists() can't use this, we can't batch our inserts
       .value(_.id, user.id)
       .value(_.email, user.email)
       .value(_.handle, user.handle)
@@ -198,7 +198,7 @@ object UserEmailRecord extends UserEmailRecord with Connector {
   def prepareInsert(userEmail: UserEmail) = {
     UserEmailRecord
       .insert
-      .ifNotExists()
+      //.ifNotExists()
       .value(_.eid, userEmail.email.toLowerCase)
       .value(_.email, userEmail.email)
       .value(_.id, userEmail.id)

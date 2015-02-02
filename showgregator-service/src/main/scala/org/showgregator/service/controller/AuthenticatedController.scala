@@ -21,7 +21,9 @@ import com.websudos.phantom.Implicits.Session
 class PhantomConnectedController(implicit val session: Session,
                                  implicit val context: ExecutionContext) extends ControllerBase
 
-class AuthenticatedController(implicit val sessionStore:SessionStore, override val session: Session, override val context: ExecutionContext) extends PhantomConnectedController {
+class AuthenticatedController(implicit val sessionStore:SessionStore,
+                              override val session: Session,
+                              override val context: ExecutionContext) extends PhantomConnectedController {
   def user(request: Request):Future[Option[BaseUser]] = {
     request.cookies.get("SessionId") match {
       case Some(cookie) => {

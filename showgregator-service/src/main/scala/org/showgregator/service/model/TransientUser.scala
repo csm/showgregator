@@ -11,6 +11,8 @@ case class TransientUser(_email: String,
                          id: UUID = null)
   extends BaseUser(_userId, _email)
 
+case class ReverseTransientUser(email: String, id: UUID)
+
 object TransientUser {
   def insertUser(user: TransientUser)(implicit session:Session): Future[ResultSet] = {
     val batch = BatchStatement()
@@ -29,11 +31,11 @@ sealed class TransientUserRecord extends CassandraTable[TransientUserRecord, Tra
   override def fromRow(r: Row): TransientUser = TransientUser(email(r), userId(r), id(r))
 }
 
-sealed class ReverseTransientUserRecord extends CassandraTable[ReverseTransientUserRecord, TransientUser] {
+sealed class ReverseTransientUserRecord extends CassandraTable[ReverseTransientUserRecord, ReverseTransientUser] {
   object email extends StringColumn(this)
   object id extends UUIDColumn(this) with PartitionKey[UUID]
 
-  override def fromRow(r: Row): TransientUser = TransientUser(email(r), id(r))
+  override def fromRow(r: Row): ReverseTransientUser = ReverseTransientUser(email(r), id(r))
 }
 
 object TransientUserRecord extends TransientUserRecord with Connector {
@@ -52,6 +54,7 @@ object TransientUserRecord extends TransientUserRecord with Connector {
     insert.value(_.eid, user.email.toLowerCase)
       .value(_.email, user.email)
       .value(_.id, user.id)
+      .value(_.userId, user.userId)
   }
 
   def prepareDelete(email: String) = delete.where(_.eid eqs email.toLowerCase)
@@ -61,7 +64,10 @@ object ReverseTransientUserRecord extends ReverseTransientUserRecord with Connec
   override val tableName = "reverse_transient_users"
 
   def forUuid(id: UUID)(implicit session:Session): Future[Option[TransientUser]] = {
-    select.where(_.id eqs id).get()
+    select.where(_.id eqs id).get().flatMap({
+      case Some(rtu) => TransientUserRecord.forEmail(rtu.email)
+      case None => Future.value(None)
+    })
   }
 
   def insertUser(user: TransientUser)(implicit session:Session): Future[ResultSet] = {

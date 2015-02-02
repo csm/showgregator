@@ -16,16 +16,21 @@ import scala.Some
 import org.showgregator.service.model.RegisterToken
 
 object RegisterController {
-  def isValidRegistration(request:Request)(implicit session: Session):Future[Boolean] = {
+  case class RegistrationCheckResult(valid: Boolean, message: String = "")
+
+  def isValidRegistration(request:Request)(implicit session: Session):Future[RegistrationCheckResult] = {
     if (!request.params.get("password").isDefined
       || !request.params.get("password").equals(request.params.get("confirm"))) {
-      throw new IllegalArgumentException("password arguments not valid")
+      return Future.value(RegistrationCheckResult(valid = false, "password arguments not valid"))
     }
-    if (!request.params.get("email").isDefined
-      || !EmailAddress.isValid(request.params.get("email").get)) {
-      throw new IllegalArgumentException("email address is not valid")
+    if (!(request.params.get("email").isDefined
+          && EmailAddress.isValid(request.params.get("email").get))) {
+      return Future.value(RegistrationCheckResult(valid = false, "email address is not valid"))
     }
-    UserRecord.getByEmail(request.params.get("email").get).map(u => u.isEmpty)
+    UserRecord.getByEmail(request.params.get("email").get).map(u => if(u.isEmpty)
+      RegistrationCheckResult(valid = true)
+    else
+      RegistrationCheckResult(valid = false, s"Address ${request.params.get("email").get} already registered"))
   }
 }
 
@@ -46,13 +51,13 @@ class RegisterController(implicit override val session:Session, override val con
   post("/register/:token") { request =>
     for {
       tokenId: UUID <- Future(UUID.fromString(request.routeParams.get("token").get))
-      valid: Boolean <- isValidRegistration(request)
-      token <- valid match {
-        case true => RegisterTokenRecord.findToken(tokenId)
-        case false => Future.value(None)
+      check <- isValidRegistration(request)
+      token <- check match {
+        case c if c.valid => RegisterTokenRecord.findToken(tokenId)
+        case c if !c.valid => Future.value(None)
       }
-      taken <- (valid, token) match {
-        case (true, Some(t)) => RegisterTokenRecord.takeToken(t,
+      taken <- (check, token) match {
+        case (c, Some(t)) if c.valid => RegisterTokenRecord.takeToken(t,
           request.params.get("email").get,
           request.params.get("handle").flatMap(h => if (h.trim.isEmpty) None else Some(h)),
           request.params.get("password").get.toCharArray).flatMap({
@@ -62,8 +67,8 @@ class RegisterController(implicit override val session:Session, override val con
             render.view(new ServerErrorView("Internal error. Please try again later.")).toFuture
           }
         })
-        case (true, None) => render.view(new ForbiddenView("Invalid token.")).toFuture
-        case _ => render.view(new BadRequestView("Invalid arguments. Please try again.")).toFuture
+        case (c, None) if c.valid => render.view(new ForbiddenView("Invalid token.")).toFuture
+        case (c, _) => render.view(new BadRequestView(c.message)).toFuture
       }
     } yield taken
   }

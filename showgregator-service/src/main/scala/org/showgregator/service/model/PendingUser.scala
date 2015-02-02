@@ -17,9 +17,9 @@ case class PendingUser(id: UUID, user: UUID, email: String, handle: Option[Strin
 
 object PendingUser {
   def createUser(email: String, handle: Option[String], password: Array[Char],
-                  transientEmail: Option[String] = None, transientId: Option[UUID] = None)(implicit session: Session): Future[Option[PendingUser]] = {
+                 userId: Option[UUID], transientEmail: Option[String] = None, transientId: Option[UUID] = None)(implicit session: Session): Future[Option[PendingUser]] = {
     for {
-      user <- Future(PendingUser(UUID.randomUUID(), UUID.randomUUID(), email, handle, PasswordHashing(password),
+      user <- Future(PendingUser(UUID.randomUUID(), userId.getOrElse(UUID.randomUUID()), email, handle, PasswordHashing(password),
         transientEmail, transientId))
       insert <- {
         val batch = BatchStatement()
@@ -90,8 +90,8 @@ object PendingUserRecord extends PendingUserRecord with Connector {
     for {
       pendingUser <- getPendingUser(id)
       transientUser <- pendingUser match {
-        case Some(pu) => TransientUserRecord.forEmail(pu.email)
-        case None => Future.value(None)
+        case Some(pu) if pu.transientEmail.isDefined => TransientUserRecord.forEmail(pu.transientEmail.get)
+        case _ => Future.value(None)
       }
       createUser <- pendingUser match {
         case Some(pu) => {

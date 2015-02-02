@@ -85,11 +85,11 @@ class LoginController(implicit val sessionStore: SessionStore,
           } else if (pendingUser.isDefined && hashesMatch) {
             render.view(new StillPendingView(pendingUser.get.email)).toFuture
           } else {
-            render.status(401).static("/html/401.html").toFuture
+            render.static("/html/401.html").unauthorized.toFuture
           }
         } yield response
       }
-      case _ => render.status(401).static("/401.html").toFuture
+      case _ => render.static("/html/401.html").unauthorized.toFuture
     }
   }
 

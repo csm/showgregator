@@ -8,8 +8,8 @@ import com.twitter.util.Duration
 import java.util.UUID
 import java.util.concurrent.TimeUnit.{SECONDS => seconds}
 
-class CalendarSpec extends FlatSpec with CassandraTest with Connector {
-  override val keySpace = "showgregator_test_calendarSpec"
+class CalendarSpec /*extends FlatSpec with CassandraTest with Connector*/ {
+  /*override val keySpace = "showgregator_test_calendarSpec"
 
   "select absent calendar" should "return nothing" in {
     val id = new UUID(0, 0)
@@ -35,5 +35,5 @@ class CalendarSpec extends FlatSpec with CassandraTest with Connector {
   override protected def afterAll(): Unit = {
     super.afterAll()
     session.execute(s"DROP KEYSPACE $keySpace;")
-  }
+  }*/
 }

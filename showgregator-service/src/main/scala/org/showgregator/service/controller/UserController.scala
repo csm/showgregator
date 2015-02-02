@@ -22,9 +22,8 @@ class UserController(implicit override val sessionStore:SessionStore, override v
       (request, user) => {
         user match {
           case u:User => render.view(new BadRequestView("You are already registered.")).status(400).toFuture
-          case tu:TransientUser => {
+          case tu:TransientUser =>
             render.view(new RegisterView(None, tu.email)).toFuture
-          }
         }
       }
     }
@@ -37,20 +36,24 @@ class UserController(implicit override val sessionStore:SessionStore, override v
         case tu:TransientUser => {
           val email = request.params.get("email")
           val password = request.params.get("password")
+          log.debug("register with email: %s", email)
           for {
-            valid <- isValidRegistration(request)
-            response <- valid match {
-              case true => {
-                PendingUser.createUser(request.params.get("email").get,
-                  request.params.get("handle"), request.params.get("password").get.toCharArray,
-                    Some(tu.email), Some(tu.id)).flatMap({
+            check <- isValidRegistration(request)
+            response <- {
+              log.debug("check result: %s", check)
+              check.valid match {
+                case true =>
+                  PendingUser.createUser(request.params.get("email").get,
+                    request.params.get("handle"), request.params.get("password").get.toCharArray,
+                    Some(tu.userId), Some(tu.email), Some(tu.id)).flatMap({
                     case Some(pu) => render.view(new SuccessfulRegisterView(pu.email)).toFuture
                     case None => {
-                      render.view(new ServerErrorView("failed to register!")).toFuture
+                      log.error("registering %s failed!", tu)
+                      render.view(new ServerErrorView("failed to register!")).internalServerError.toFuture
                     }
                   })
+                case false => render.view(new BadRequestView(check.message)).badRequest.toFuture
               }
-              case false => render.view(new BadRequestView("Invalid input")).status(400).toFuture
             }
           } yield response
         }

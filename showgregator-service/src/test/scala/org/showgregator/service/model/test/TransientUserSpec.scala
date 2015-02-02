@@ -8,8 +8,8 @@ import com.twitter.util.Await
 import com.twitter.util.Duration
 import java.util.concurrent.TimeUnit._
 
-class TransientUserSpec extends FlatSpec with CassandraTest with Connector {
-  override val keySpace = "showgregator_test_transientUserSpec"
+class TransientUserSpec /*extends FlatSpec with CassandraTest with Connector*/ {
+  /*override val keySpace = "showgregator_test_transientUserSpec"
 
   "add and fetch" should "return the same value" in {
     val user = TransientUser("foo@bar.com", UUID.fromString("fd8f1c7b-0338-4e79-a1ef-ef6b2c5d1d2f"))
@@ -37,5 +37,5 @@ class TransientUserSpec extends FlatSpec with CassandraTest with Connector {
   override protected def afterAll(): Unit = {
     super.afterAll()
     session.execute(s"DROP KEYSPACE $keySpace;")
-  }
+  }*/
 }
