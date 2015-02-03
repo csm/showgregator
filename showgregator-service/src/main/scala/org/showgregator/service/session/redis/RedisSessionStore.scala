@@ -1,9 +1,10 @@
 package org.showgregator.service.session.redis
 
+import com.twitter.util.Future
 import org.showgregator.service.session.{Session, SessionStore}
 import scredis._
 import java.util.UUID
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.ExecutionContext
 import org.joda.time.format.ISODateTimeFormat
 import org.joda.time.{Duration, DateTime}
 import org.showgregator.service.model.{TransientUser, User, BaseUser}
@@ -11,6 +12,7 @@ import java.io.ByteArrayOutputStream
 import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.io.{Input, Output}
 import scredis.serialization.{BytesWriter, BytesReader}
+import org.showgregator.service.finagle.FinagleFutures.ScalaFutureWrapper
 
 object RedisSessionStore {
   val kryo = new Kryo()
@@ -79,10 +81,10 @@ class RedisSessionStore(redis: Redis, ttl: Duration = Duration.standardHours(1))
   def get(id: UUID): Future[Option[Session]] = {
     val sId = s"session.${id.toString}"
     for {
-      map:Option[Array[Byte]] <- redis.get[Array[Byte]](sId)
+      map:Option[Array[Byte]] <- redis.get[Array[Byte]](sId).asFinagle
       ttl:Either[Boolean, Long] <- map match {
-        case Some(m) => redis.pTtl(sId)
-        case None => Future.successful(Left(false))
+        case Some(m) => redis.pTtl(sId).asFinagle
+        case None => Future.value(Left(false))
       }
     } yield {
       (map, ttl) match {
@@ -99,14 +101,14 @@ class RedisSessionStore(redis: Redis, ttl: Duration = Duration.standardHours(1))
   def put(session: Session): Future[Boolean] = {
     val id = s"session.${session.id.toString}"
     val a = freezeSession(session)
-    redis.set(id, a).flatMap(_ => redis.pExpire(id, ttl.getMillis))
+    redis.set(id, a).flatMap(_ => redis.pExpire(id, ttl.getMillis)).asFinagle
   }
 
   def delete(id: UUID): Future[Boolean] = {
-    redis.del(s"session.${id.toString}").map(_ == 1)
+    redis.del(s"session.${id.toString}").map(_ == 1).asFinagle
   }
 
   def extend(id: UUID): Future[Boolean] = {
-    redis.pExpire(s"session.${id.toString}", ttl.getMillis)
+    redis.pExpire(s"session.${id.toString}", ttl.getMillis).asFinagle
   }
 }

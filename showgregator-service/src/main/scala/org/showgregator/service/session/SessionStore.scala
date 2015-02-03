@@ -1,6 +1,6 @@
 package org.showgregator.service.session
 
-import scala.concurrent.Future
+import com.twitter.util.Future
 import java.util.UUID
 
 /**
@@ -15,4 +15,7 @@ trait SessionStore {
   def put(session: Session): Future[Boolean]
   def delete(id: UUID): Future[Boolean]
   def extend(id: UUID): Future[Boolean]
+  def exists(id: UUID): Future[Boolean] = {
+    get(id).map(_.isDefined)
+  }
 }

@@ -46,6 +46,7 @@ object InitTables extends App {
       oldPending <- OldUserPendingEmailChangeRecord.create.future().map(_.wasApplied())
       newPending <- NewUserPendingEmailChangeRecord.create.future().map(_.wasApplied())
       passwordChange <- PasswordChangeRecord.create.future().map(_.wasApplied())
+      userAccess <- UserAccessRecord.create.future().map(_.wasApplied())
     } yield (calendars,
         events,
         eventComments,
@@ -60,7 +61,8 @@ object InitTables extends App {
         userEmails,
         userCalendarRecord,
         emailChangeRecord,
-        passwordChange)
+        passwordChange,
+        userAccess)
     println(Await.result(f, 1.minute))
   }
 

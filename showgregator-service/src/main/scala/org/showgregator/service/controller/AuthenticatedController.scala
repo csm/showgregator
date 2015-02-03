@@ -31,7 +31,7 @@ class AuthenticatedController(implicit val sessionStore:SessionStore,
         for {
           sessionId <- Future.value(Try(UUID.fromString(cookie.value)))
           userSession:Option[UserSession] <- sessionId match {
-            case Return(sid) => sessionStore.get(sid).asFinagle
+            case Return(sid) => sessionStore.get(sid)
             case Throw(_) => Future.value(None)
           }
           user <- userSession match {

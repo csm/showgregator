@@ -65,7 +65,7 @@ class LoginController(implicit val sessionStore: SessionStore,
           session <- user match {
             case Some(u) => {
               val s = UserSession(UUID.randomUUID(), u, DateTime.now(), DateTime.now().plusHours(12))
-              sessionStore.put(s).map(if (_) Some(s) else None).asFinagle
+              sessionStore.put(s).map(if (_) Some(s) else None)
             }
             case None => Future.value(None)
           }
@@ -95,8 +95,8 @@ class LoginController(implicit val sessionStore: SessionStore,
 
   get("/logout") { request =>
     request.cookies.get("SessionId") match {
-      case Some(sid) => sessionStore.get(UUID.fromString(sid.value)).asFinagle.flatMap {
-        case Some(userSession) => sessionStore.delete(userSession.id).asFinagle.flatMap(_ => {
+      case Some(sid) => sessionStore.get(UUID.fromString(sid.value)).flatMap {
+        case Some(userSession) => sessionStore.delete(userSession.id).flatMap(_ => {
           val cookie = new Cookie("SessionId", "")
           cookie.path = "/"
           cookie.isDiscard = true
@@ -116,7 +116,7 @@ class LoginController(implicit val sessionStore: SessionStore,
     log.debug("sessionId: %s uuid: %S then: %s", sessionId, uuid, then)
     for {
       userSession:Option[UserSession] <- sessionId match {
-        case Some(sid) => sessionStore.get(sid).asFinagle
+        case Some(sid) => sessionStore.get(sid)
         case None => Future.value(None)
       }
       transientUser:Option[TransientUser] <- uuid match {
@@ -128,7 +128,7 @@ class LoginController(implicit val sessionStore: SessionStore,
         case (Some(user), Some(sess)) => {
           log.debug("matching user %s with session %s", user, sess)
           if (user.email.equals(sess.user.email)) {
-            sessionStore.extend(sess.id).asFinagle.flatMap(_ => redirect(nextPage(then)).toFuture)
+            sessionStore.extend(sess.id).flatMap(_ => redirect(nextPage(then)).toFuture)
           } else {
             render.view(new ForbiddenView()).status(403).toFuture
           }
@@ -138,7 +138,7 @@ class LoginController(implicit val sessionStore: SessionStore,
         case (Some(user), None) => {
           log.debug("logging in %s", user)
           val newSession = UserSession(UUID.randomUUID(), user, DateTime.now(), DateTime.now())
-          sessionStore.put(newSession).asFinagle.flatMap {
+          sessionStore.put(newSession).flatMap {
             case true => redirect(nextPage(request.params.get("then"))).cookie(makeCookie(newSession.id)).toFuture
             case false => render.view(new ServerErrorView("")).status(503).toFuture
           }

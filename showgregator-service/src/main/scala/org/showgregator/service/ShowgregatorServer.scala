@@ -4,6 +4,7 @@ import com.twitter.finatra.FinatraServer
 import org.showgregator.service.admin.DefaultAdminAuthStore
 import org.showgregator.service.controller._
 import com.datastax.driver.core.Cluster
+import org.showgregator.service.filters.AccessFilter
 import org.showgregator.service.session.{SessionStore, DefaultSessionStore}
 import org.showgregator.service.session.redis.RedisSessionStore
 import scredis.Redis
@@ -39,6 +40,8 @@ object ShowgregatorServer extends FinatraServer {
   implicit val sessionStore = store
 
   log.info("running on java version: %s", System.getProperty("java.version"))
+
+  addFilter(new AccessFilter)
 
   register(new RootController)
   register(new LoginController)

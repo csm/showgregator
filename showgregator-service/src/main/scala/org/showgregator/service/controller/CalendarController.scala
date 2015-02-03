@@ -24,9 +24,13 @@ class CalendarController(override implicit val sessionStore:SessionStore,
                          override implicit val session: Session,
                          override implicit val context: ExecutionContext)
   extends AuthenticatedController {
-  get("/calendar/:id/today") { request =>
-    val now = DateTime.now()
-    route.get(s"/calendar/${request.routeParams.get("id").get}/${now.year().get()}/${now.monthOfYear().get()}")
+  get("/calendar/:id/today") {
+    !!! {
+      (request, user) => {
+        val now = DateTime.now()
+        redirect(s"/calendar/${request.routeParams.get("id").get}/${now.year().get()}/${now.monthOfYear().get()}").toFuture
+      }
+    }
   }
 
   get("/calendar/:id/:year/:month") {
@@ -43,7 +47,22 @@ class CalendarController(override implicit val sessionStore:SessionStore,
           user match {
             case u: User => UserCalendarRecord.getCalendar(user.userId)
               .flatMap({
-                case Some(uc) => route.get(s"/calendar/${uc.calendar}/${year.get}/${month.get}")
+                case Some(uc) => for {
+                  calendar <- CalendarRecord.getById(uc.calendar)
+                  events <- calendar match {
+                    case Some(cal) => EventInCalendarRecord.fetchForCalendar(cal.id, calMonth.allDays.head.head, calMonth.allDays.last.last)
+                    case None => Future.value(Seq())
+                  }
+                  response <- calendar match {
+                    case Some(cal) => if (cal.hasPermission(user.userId, CalendarPermissions.Read)) {
+                      render.view(new MonthView(calMonth.startOfMonth, monthName, year.get, calMonth.allDays, user, cal, events, Some("mine"))).toFuture
+                    } else {
+                      render.static("/html/401.html").status(401).toFuture
+                    }
+                    case None => render.view(new ServerErrorView("Damn, we were unable to find your calendar.")).status(500).toFuture
+                  }
+                } yield response
+
                 case None => render.view(new ServerErrorView("Damn, we were unable to find your calendar.")).status(500).toFuture
             })
             case _ =>
@@ -63,7 +82,7 @@ class CalendarController(override implicit val sessionStore:SessionStore,
               } else {
                 render.static("/html/401.html").status(401).toFuture
               }
-              case None => render.view(new ServerErrorView("Damn, we were unable to find your calendar.")).status(500).toFuture
+              case None => render.view(new ServerErrorView("Damn, we were unable to find that calendar.")).status(500).toFuture
             }
           } yield response
         }

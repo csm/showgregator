@@ -1,7 +1,7 @@
 package org.showgregator.service.session
 
 import java.util.UUID
-import scala.concurrent.Future
+import com.twitter.util.Future
 import org.joda.time.DateTime
 import com.twitter.finatra.Logging
 import com.twitter.logging.Logger
@@ -19,14 +19,14 @@ class DefaultSessionStore extends SessionStore {
       case Some(s) => if (s.expires.isBefore(DateTime.now())) {
         sessions.remove(id)
         log.debug("session %s expired", id)
-        Future.successful(None)
+        Future.value(None)
       } else {
         log.debug("got session %s", s.session)
-        Future.successful(Some(s.session))
+        Future.value(Some(s.session))
       }
       case None => {
         log.debug("no session for %s", id)
-        Future.successful(None)
+        Future.value(None)
       }
     }
   }
@@ -35,12 +35,12 @@ class DefaultSessionStore extends SessionStore {
     log.debug("putting session %s", session)
     sessions += (session.id -> SessionHolder(session, DateTime.now().plusHours(1)))
     log.debug("sessions: %s", sessions)
-    Future.successful(true)
+    Future.value(true)
   }
 
   def delete(id: UUID): Future[Boolean] = {
     log.debug("delete session %s", id)
-    Future.successful(sessions.remove(id).isDefined)
+    Future.value(sessions.remove(id).isDefined)
   }
 
   def extend(id: UUID): Future[Boolean] = {
@@ -49,7 +49,7 @@ class DefaultSessionStore extends SessionStore {
       case Some(s) => put(s.session)
       case None => {
         log.debug("no session %s to extend", id)
-        Future.successful(false)
+        Future.value(false)
       }
     }
   }
