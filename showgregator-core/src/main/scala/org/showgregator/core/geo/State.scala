@@ -1,8 +1,7 @@
-
 package org.showgregator.core.geo
 
 import org.joda.time.{DateTime, DateTimeZone}
-import org.showgregator.core.geo.SingleTimeZone
+import org.showgregator.core.geo.{Counties, SingleTimeZone}
 
 case class City(name: String, county: County)
 case class County(name: String, state: State)
@@ -157,6 +156,28 @@ object Counties {
     val Lewis = County("Lewis", Idaho)
     // fixme, parts of Idaho county differ.
   }
+
+  object IndianaCounties {
+    val Jasper = County("Jasper", Indiana)
+    val Lake = County("Lake", Indiana)
+    val LaPorte = County("LaPorte", Indiana)
+    val Newton = County("Newton", Indiana)
+    val Porter = County("Porter", Indiana)
+    val Starke = County("Starke", Indiana)
+    val Gibson = County("Gibson", Indiana)
+    val Perry = County("Perry", Indiana)
+    val Posey = County("Posey", Indiana)
+    val Spencer = County("Spencer", Indiana)
+    val Vanderburgh = County("Vanderhurgh", Indiana)
+    val Warrick = County("Warrick", Indiana)
+  }
+
+  object KansasCounties {
+    val Greely = County("Greely", Kansas)
+    val Hamilton = County("Hamilton", Kansas)
+    val Sherman = County("Sherman", Kansas)
+    val Wallace = County("Wallack", Kansas)
+  }
 }
 
 object TimeZones {
@@ -189,6 +210,7 @@ object TimeZones {
     FloridaCounties.Bay -> CentralDaylight,
     FloridaCounties.Jackson -> CentralDaylight,
     FloridaCounties.Calhoun -> CentralDaylight,
+
     IdahoCounties.Benewah -> PacificDaylight,
     IdahoCounties.Bonner -> PacificDaylight,
     IdahoCounties.Boundary -> PacificDaylight,
@@ -197,7 +219,25 @@ object TimeZones {
     IdahoCounties.Latah -> PacificDaylight,
     IdahoCounties.Lewis -> PacificDaylight,
     IdahoCounties.NezPerce -> PacificDaylight,
-    IdahoCounties.Shoshone -> PacificDaylight
+    IdahoCounties.Shoshone -> PacificDaylight,
+
+    IndianaCounties.Gibson -> CentralDaylight,
+    IndianaCounties.Jasper -> CentralDaylight,
+    IndianaCounties.Lake -> CentralDaylight,
+    IndianaCounties.LaPorte -> CentralDaylight,
+    IndianaCounties.Newton -> CentralDaylight,
+    IndianaCounties.Perry -> CentralDaylight,
+    IndianaCounties.Porter -> CentralDaylight,
+    IndianaCounties.Posey -> CentralDaylight,
+    IndianaCounties.Spencer -> CentralDaylight,
+    IndianaCounties.Starke -> CentralDaylight,
+    IndianaCounties.Vanderburgh -> CentralDaylight,
+    IndianaCounties.Warrick -> CentralDaylight,
+
+    KansasCounties.Greely -> MountainDaylight,
+    KansasCounties.Hamilton -> MountainDaylight,
+    KansasCounties.Sherman -> MountainDaylight,
+    KansasCounties.Wallace -> MountainDaylight
   )
 
   val ByState = Map(
