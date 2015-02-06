@@ -1,6 +1,8 @@
 package org.showgregator.service.session.redis
 
+import com.twitter.logging.Logger
 import com.twitter.util.Future
+import org.showgregator.core.Bytes
 import org.showgregator.service.session.{Session, SessionStore}
 import scredis._
 import java.util.UUID
@@ -16,6 +18,7 @@ import org.showgregator.service.finagle.FinagleFutures.ScalaFutureWrapper
 
 object RedisSessionStore {
   val kryo = new Kryo()
+  val log = Logger("finatra")
 
   def freezeSession(s:Session):Array[Byte] = {
     val bout = new ByteArrayOutputStream()
@@ -47,6 +50,7 @@ object RedisSessionStore {
   }
 
   def unfreezeSession(a:Array[Byte]):Session = {
+    log.debug("unfreezing: %s", Bytes(a))
     val input = new Input(a)
     val id = kryo.readObject(input, classOf[UUID])
     val t = new DateTime(kryo.readObject(input, classOf[Long]))
@@ -73,24 +77,35 @@ object RedisSessionStore {
 /**
  * Session store on Redis.
  */
-class RedisSessionStore(redis: Redis, ttl: Duration = Duration.standardHours(1))(implicit context: ExecutionContext) extends SessionStore {
+class RedisSessionStore(redises: Array[Redis], ttl: Duration = Duration.standardHours(1))(implicit context: ExecutionContext) extends SessionStore {
   import RedisSessionStore._
   val DateFormatter = ISODateTimeFormat.basicDateTime()
+
+  private def redis(key: UUID): Redis = {
+    redises((Math.abs(key.getLeastSignificantBits) % redises.length).toInt)
+  }
 
   implicit val reader = BytesReader
   def get(id: UUID): Future[Option[Session]] = {
     val sId = s"session.${id.toString}"
     for {
-      map:Option[Array[Byte]] <- redis.get[Array[Byte]](sId).asFinagle
+      map:Option[Array[Byte]] <- redis(id).get[Array[Byte]](sId).asFinagle
       ttl:Either[Boolean, Long] <- map match {
-        case Some(m) => redis.pTtl(sId).asFinagle
+        case Some(m) => redis(id).pTtl(sId).asFinagle
         case None => Future.value(Left(false))
       }
     } yield {
       (map, ttl) match {
         case (Some(a), Right(t)) => {
-          val s = unfreezeSession(a)
-          Some(s.expires(DateTime.now().plusMillis(t.toInt)))
+          try {
+            val s = unfreezeSession(a)
+            Some(s.expires(DateTime.now().plusMillis(t.toInt)))
+          } catch {
+            case t: Throwable => {
+              log.warning(t, "error unfreezing session")
+              None
+            }
+          }
         }
         case _ => None
       }
@@ -101,14 +116,14 @@ class RedisSessionStore(redis: Redis, ttl: Duration = Duration.standardHours(1))
   def put(session: Session): Future[Boolean] = {
     val id = s"session.${session.id.toString}"
     val a = freezeSession(session)
-    redis.set(id, a).flatMap(_ => redis.pExpire(id, ttl.getMillis)).asFinagle
+    redis(session.id).set(id, a).flatMap(_ => redis(session.id).pExpire(id, ttl.getMillis)).asFinagle
   }
 
   def delete(id: UUID): Future[Boolean] = {
-    redis.del(s"session.${id.toString}").map(_ == 1).asFinagle
+    redis(id).del(s"session.${id.toString}").map(_ == 1).asFinagle
   }
 
   def extend(id: UUID): Future[Boolean] = {
-    redis.pExpire(s"session.${id.toString}", ttl.getMillis).asFinagle
+    redis(id).pExpire(s"session.${id.toString}", ttl.getMillis).asFinagle
   }
 }

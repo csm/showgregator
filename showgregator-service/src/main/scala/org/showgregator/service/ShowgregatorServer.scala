@@ -33,7 +33,7 @@ object ShowgregatorServer extends FinatraServer {
     .build()
   implicit val session = cluster.connect("showgregator")
   val store:SessionStore = sessionStorage match {
-    case "redis" => new RedisSessionStore(Redis())
+    case "redis" => new RedisSessionStore(Array(Redis()))
     case _ => new DefaultSessionStore
   }
   log.info("using session store %s (flag: %s)", store, sessionStorage)

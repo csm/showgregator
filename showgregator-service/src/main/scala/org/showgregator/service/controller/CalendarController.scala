@@ -89,4 +89,17 @@ class CalendarController(override implicit val sessionStore:SessionStore,
       }
     }
   }
+
+  get("/calendar/:id/:year/:month/:day") {
+    !!! { (request, user) =>
+      val year = request.routeParams.get("year").map(Integer.parseInt)
+      val month = request.routeParams.get("month").map(Integer.parseInt)
+      val day = request.routeParams.get("day").map(Integer.parseInt)
+      require(year.isDefined)
+      require(month.isDefined && month.get >= 1 && month.get <= 12)
+      val date = new DateTime(year.get, month.get, day.get, 0, 0)
+
+      throw new UnsupportedOperationException("not done yet");
+    }
+  }
 }

@@ -4,6 +4,15 @@ Revolver.settings
 
 mainClass in (Compile, run) := Some("org.showgregator.service.ShowgregatorServer")
 
+mainClass in assembly := Some("org.showgregator.service.ShowgregatorServer")
+
+assemblyMergeStrategy in assembly := {
+  case "META-INF/maven/io.netty/netty/pom.properties"|"META-INF/maven/io.netty/netty/pom.xml"|"com/twitter/common/args/apt/cmdline.arg.info.txt.1" => MergeStrategy.first
+  case x =>
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    oldStrategy(x)
+}
+
 fork := true
 
 resolvers ++= Seq(
@@ -30,7 +39,7 @@ projectDependencies += "com.twitter" %% "finatra" % "1.6.0"
 
 projectDependencies += "com.livestream" %% "scredis" % "2.0.6"
 
-projectDependencies += "com.esotericsoftware" % "kryo" % "3.0.0"
+projectDependencies += "com.esotericsoftware" % "kryo" % "3.0.0" exclude("org.ow2.asm", "asm")
 
 projectDependencies += "com.websudos" %% "phantom-testing" % "1.5.0" % "test" exclude("com.twitter", "finagle_zookeeper") exclude("org.cassandraunit", "cassandra-unit")
 //exclude("com.twitter.common.zookeeper", "server-set") exclude("com.twitter.common.zookeeper", "client") exclude("com.twitter.common.zookeeper", "group")

@@ -8,7 +8,7 @@ import javax.crypto.spec.SecretKeySpec
 import com.datastax.driver.core.{ResultSet, Row}
 import com.twitter.util.Future
 import com.websudos.phantom.CassandraTable
-import com.websudos.phantom.Implicits.{Session, StringColumn, UUIDColumn, BlobColumn}
+import com.websudos.phantom.Implicits._
 import com.websudos.phantom.column.DateTimeColumn
 import com.websudos.phantom.keys.{Ascending, ClusteringOrder, PrimaryKey, PartitionKey}
 import org.joda.time.{Duration, DateTime}
@@ -65,6 +65,7 @@ object UserAccessRecord extends UserAccessRecord with Connector {
 
   def insertAccess(access: UserAccess, ttl: Duration = Duration.standardDays(7))(implicit session: Session): Future[ResultSet] = {
     insert
+      .consistencyLevel_=(ConsistencyLevel.ONE)
       .value(_.id, access.id)
       .value(_.when, access.when)
       .value(_.uri, access.uri)
