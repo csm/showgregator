@@ -3,6 +3,9 @@ package org.showgregator.core.geo
 import org.joda.time.{DateTime, DateTimeZone}
 import org.showgregator.core.geo.{Counties, SingleTimeZone}
 
+import scala.io.Source
+import scala.util.parsing.json.{JSONObject, JSONArray, JSON}
+
 case class City(name: String, county: County)
 case class County(name: String, state: State)
 case class State(name: String, abbrev: String, country: Country)
@@ -33,10 +36,6 @@ class USSummerTime(baseZone: DateTimeZone) extends SummerTime {
     }
   }
 }
-object ESTSummerTime extends USSummerTime(DateTimeZone.forID("EST"))
-object CSTSummerTime extends USSummerTime(DateTimeZone.forID("CST"))
-object MSTSummerTime extends USSummerTime(DateTimeZone.forID("MST"))
-object PSTSummerTime extends USSummerTime(DateTimeZone.forID("PST"))
 
 abstract class DateVariableTimeZone {
   def timeZoneForDate(date: DateTime):DateTimeZone
@@ -178,6 +177,94 @@ object Counties {
     val Sherman = County("Sherman", Kansas)
     val Wallace = County("Wallack", Kansas)
   }
+
+  object KentuckyCounties {
+    val Adair = County("Adair", Kentucky)
+    val Allen = County("Allen", Kentucky)
+    val Ballard = County("Ballard", Kentucky)
+    val Barren = County("Barren", Kentucky)
+    val Breckinridge = County("Breckinridge", Kentucky)
+    val Butler = County("Butler", Kentucky)
+    val Caldwell = County("Caldwell", Kentucky)
+    val Calloway = County("Calloway", Kentucky)
+    val Carlisle = County("Carlisle", Kentucky)
+    val Christian = County("Christian", Kentucky)
+    val Clinton = County("Clinton", Kentucky)
+    val Crittenden = County("Crittenden", Kentucky)
+    val Cumberland = County("Cumberland", Kentucky)
+    val Daviess = County("Daviess", Kentucky)
+    val Edmonson = County("Edmonson", Kentucky)
+    val Fulton = County("Fulton", Kentucky)
+    val Graves = County("Graves", Kentucky)
+    val Grayson = County("Grayson", Kentucky)
+    val Green = County("Green", Kentucky)
+    val Hancock = County("Hancock", Kentucky)
+    val Hart = County("Hart", Kentucky)
+    val Henderson = County("Henderson", Kentucky)
+    val Hickman = County("Hickman", Kentucky)
+    val Hopkins = County("Hopkins", Kentucky)
+    val Livingston = County("Livingston", Kentucky)
+    val Logan = County("Logan", Kentucky)
+    val McCracken = County("McCracken", Kentucky)
+    val McLean = County("McLean", Kentucky)
+    val Marshall = County("Marshall", Kentucky)
+    val Metcalfe = County("Metcalfe", Kentucky)
+    val Monroe = County("Monroe", Kentucky)
+    val Muhlenberg = County("Muhlenberg", Kentucky)
+    val Ohio = County("Ohio", Kentucky)
+    val Russell = County("Russell", Kentucky)
+    val Simpson = County("Simpson", Kentucky)
+    val Todd = County("Todd", Kentucky)
+    val Trigg = County("Trigg", Kentucky)
+    val Union = County("Union", Kentucky)
+    val Warren = County("Warren", Kentucky)
+    val Webster = County("Webster", Kentucky)
+  }
+
+  object MichiganCounties {
+    val Gogebic = County("Gogebic", Michigan)
+    val Iron = County("Iron", Michigan)
+    val Dickinson = County("Dickinson", Michigan)
+    val Menominee = County("Menominee", Michigan)
+  }
+
+  object NebraskaCounties {
+    val Arthur = County("Arthur", Nebraska)
+    val Banner = County("Banner", Nebraska)
+    val BoxButte = County("Box Butte", Nebraska)
+    val Chase = County("Chase", Nebraska)
+    val Cheyenne = County("Cheyenne", Nebraska)
+    val Dawes = County("Dawes", Nebraska)
+    val Deuel = County("Deuel", Nebraska)
+    val Dundy = County("Dundy", Nebraska)
+    val Garden = County("Garden", Nebraska)
+    val Grant = County("Grant", Nebraska)
+    val Hooker = County("Hooker", Nebraska)
+    val Keith = County("Keith", Nebraska)
+    val Kimball = County("Kimball", Nebraska)
+    val Morrill = County("Morrill", Nebraska)
+    val Perkins = County("Perkins", Nebraska)
+    val ScottsBluff = County("Scotts Bluff", Nebraska)
+    val Sheridan = County("Sheridan", Nebraska)
+    val Sioux = County("Sioux", Nebraska)
+  }
+
+  object NorthDakotaCounties {
+    val Adams = County("Adams", NorthDakota)
+    val Billings = County("Billings", NorthDakota)
+    val Bowman = County("Bowman", NorthDakota)
+    val Dunn = County("Dunn", NorthDakota)
+    val GoldenValley = County("Golden Valley", NorthDakota)
+    val Grant = County("Grant", NorthDakota)
+    val Hettinger = County("Hettinger", NorthDakota)
+    val Sioux = County("Sioux", NorthDakota)
+    val Slope = County("Slope", NorthDakota)
+    val Stark = County("Stark", NorthDakota)
+  }
+
+  object OregonCounties {
+    val Malheur = County("Malheur", Oregon)
+  }
 }
 
 object TimeZones {
@@ -196,10 +283,10 @@ object TimeZones {
   import States._
   import Counties._
 
-  val EasternDaylight = DaylightSavingsTimeZone(EST, EDT, ESTSummerTime)
-  val CentralDaylight = DaylightSavingsTimeZone(CST, CDT, CSTSummerTime)
-  val PacificDaylight = DaylightSavingsTimeZone(PST, PDT, PSTSummerTime)
-  val MountainDaylight = DaylightSavingsTimeZone(MST, MDT, MSTSummerTime)
+  val EasternDaylight = DaylightSavingsTimeZone(EST, EDT, new USSummerTime(EST))
+  val CentralDaylight = DaylightSavingsTimeZone(CST, CDT, new USSummerTime(CST))
+  val PacificDaylight = DaylightSavingsTimeZone(PST, PDT, new USSummerTime(PST))
+  val MountainDaylight = DaylightSavingsTimeZone(MST, MDT, new USSummerTime(MST))
 
   val ByCounty = Map(
     FloridaCounties.Escambia -> CentralDaylight,
@@ -237,7 +324,86 @@ object TimeZones {
     KansasCounties.Greely -> MountainDaylight,
     KansasCounties.Hamilton -> MountainDaylight,
     KansasCounties.Sherman -> MountainDaylight,
-    KansasCounties.Wallace -> MountainDaylight
+    KansasCounties.Wallace -> MountainDaylight,
+
+    KentuckyCounties.Adair -> CentralDaylight,
+    KentuckyCounties.Allen -> CentralDaylight,
+    KentuckyCounties.Ballard -> CentralDaylight,
+    KentuckyCounties.Barren -> CentralDaylight,
+    KentuckyCounties.Breckinridge -> CentralDaylight,
+    KentuckyCounties.Butler -> CentralDaylight,
+    KentuckyCounties.Caldwell -> CentralDaylight,
+    KentuckyCounties.Calloway -> CentralDaylight,
+    KentuckyCounties.Carlisle -> CentralDaylight,
+    KentuckyCounties.Christian -> CentralDaylight,
+    KentuckyCounties.Clinton -> CentralDaylight,
+    KentuckyCounties.Crittenden -> CentralDaylight,
+    KentuckyCounties.Cumberland -> CentralDaylight,
+    KentuckyCounties.Daviess -> CentralDaylight,
+    KentuckyCounties.Edmonson -> CentralDaylight,
+    KentuckyCounties.Fulton -> CentralDaylight,
+    KentuckyCounties.Graves -> CentralDaylight,
+    KentuckyCounties.Grayson -> CentralDaylight,
+    KentuckyCounties.Green -> CentralDaylight,
+    KentuckyCounties.Hancock -> CentralDaylight,
+    KentuckyCounties.Hart -> CentralDaylight,
+    KentuckyCounties.Henderson -> CentralDaylight,
+    KentuckyCounties.Hickman -> CentralDaylight,
+    KentuckyCounties.Hopkins -> CentralDaylight,
+    KentuckyCounties.Livingston -> CentralDaylight,
+    KentuckyCounties.Logan -> CentralDaylight,
+    KentuckyCounties.Logan -> CentralDaylight,
+    KentuckyCounties.McCracken -> CentralDaylight,
+    KentuckyCounties.McLean -> CentralDaylight,
+    KentuckyCounties.Marshall -> CentralDaylight,
+    KentuckyCounties.Metcalfe -> CentralDaylight,
+    KentuckyCounties.Monroe -> CentralDaylight,
+    KentuckyCounties.Muhlenberg -> CentralDaylight,
+    KentuckyCounties.Ohio -> CentralDaylight,
+    KentuckyCounties.Russell -> CentralDaylight,
+    KentuckyCounties.Simpson -> CentralDaylight,
+    KentuckyCounties.Todd -> CentralDaylight,
+    KentuckyCounties.Trigg -> CentralDaylight,
+    KentuckyCounties.Union -> CentralDaylight,
+    KentuckyCounties.Warren -> CentralDaylight,
+    KentuckyCounties.Webster -> CentralDaylight,
+
+    MichiganCounties.Dickinson -> CentralDaylight,
+    MichiganCounties.Gogebic -> CentralDaylight,
+    MichiganCounties.Iron -> CentralDaylight,
+    MichiganCounties.Menominee -> CentralDaylight,
+
+    NebraskaCounties.Arthur -> MountainDaylight,
+    NebraskaCounties.Banner -> MountainDaylight,
+    NebraskaCounties.BoxButte -> MountainDaylight,
+    NebraskaCounties.Chase -> MountainDaylight,
+    NebraskaCounties.Cheyenne -> MountainDaylight,
+    NebraskaCounties.Dawes -> MountainDaylight,
+    NebraskaCounties.Deuel -> MountainDaylight,
+    NebraskaCounties.Dundy -> MountainDaylight,
+    NebraskaCounties.Garden -> MountainDaylight,
+    NebraskaCounties.Grant -> MountainDaylight,
+    NebraskaCounties.Hooker -> MountainDaylight,
+    NebraskaCounties.Keith -> MountainDaylight,
+    NebraskaCounties.Kimball -> MountainDaylight,
+    NebraskaCounties.Morrill -> MountainDaylight,
+    NebraskaCounties.Perkins -> MountainDaylight,
+    NebraskaCounties.ScottsBluff -> MountainDaylight,
+    NebraskaCounties.Sheridan -> MountainDaylight,
+    NebraskaCounties.Sioux -> MountainDaylight,
+
+    NorthDakotaCounties.Adams -> MountainDaylight,
+    NorthDakotaCounties.Billings -> MountainDaylight,
+    NorthDakotaCounties.Bowman -> MountainDaylight,
+    NorthDakotaCounties.Dunn -> MountainDaylight,
+    NorthDakotaCounties.GoldenValley -> MountainDaylight,
+    NorthDakotaCounties.Grant -> MountainDaylight,
+    NorthDakotaCounties.Hettinger -> MountainDaylight,
+    NorthDakotaCounties.Sioux -> MountainDaylight,
+    NorthDakotaCounties.Slope -> MountainDaylight,
+    NorthDakotaCounties.Stark -> MountainDaylight,
+
+    OregonCounties.Malheur -> MountainDaylight
   )
 
   val ByState = Map(
@@ -254,21 +420,21 @@ object TimeZones {
     Hawaii -> SingleTimeZone(HST),
     Idaho -> MountainDaylight,
     Illinois -> CentralDaylight,
-    Indiana -> EasternDaylight, // FIXME, except corners
+    Indiana -> EasternDaylight,
     Iowa -> CentralDaylight,
-    Kansas -> CentralDaylight, // FIXME, except Western counties
-    Kentucky -> EasternDaylight, // FIXME, except Western half
+    Kansas -> CentralDaylight,
+    Kentucky -> EasternDaylight,
     Louisiana -> CentralDaylight,
     Maine -> EasternDaylight,
     Maryland -> EasternDaylight,
     Massachusetts -> EasternDaylight,
-    Michigan -> EasternDaylight, // FIXME, except Wisconsin border
+    Michigan -> EasternDaylight,
     Minnesota -> CentralDaylight,
     Mississippi -> CentralDaylight,
     Missouri -> CentralDaylight,
     Montana -> MountainDaylight,
-    Nebraska -> CentralDaylight, // FIXME, except West parts
-    Nevada -> PacificDaylight, // FIXME, except eastern parts
+    Nebraska -> CentralDaylight,
+    Nevada -> PacificDaylight, // FIXME, except northern parts of Elko County
     NewJersey -> EasternDaylight,
     NewMexico -> MountainDaylight,
     NewYork -> EasternDaylight,
