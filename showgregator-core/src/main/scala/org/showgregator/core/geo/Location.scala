@@ -22,7 +22,11 @@ object Location {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   println(getClass.getResource("/maxmind/GeoLite2-City.mmdb"))
-  private val geoLiteDb:DatabaseReader = null // new Builder(getClass.getResourceAsStream("maxmind/GeoLite2-City.mmdb")).build()
+  private val geoLiteDb:DatabaseReader = try {
+    new Builder(getClass.getResourceAsStream("maxmind/GeoLite2-City.mmdb")).build()
+  } catch {
+    case t:Throwable => null
+  }
 
   def findByAddress(addr: InetAddress): Future[Option[City]] = {
     try {
@@ -55,6 +59,7 @@ object Location {
         None
       else {
         val doc = indexSearcher.doc(docs.scoreDocs(0).doc)
+        println(s"doc: ${doc.get("state")}, ${doc.get("county")}")
         States.forAbbrev(doc.get("state")).map(s => County(doc.get("county"), s))
       }
     }
