@@ -28,9 +28,11 @@ object RegisterTokenRecord extends RegisterTokenRecord with Connector {
   def takeToken(token: RegisterToken,
                 email: String,
                 handle: Option[String],
-                password: Array[Char])(implicit session: Session): Future[Option[PendingUser]] = {
+                password: Array[Char],
+                city:Option[City] = None,
+                timeZoneId:Option[String] = None)(implicit session: Session): Future[Option[PendingUser]] = {
     for {
-      user <- Future(PendingUser(UUID.randomUUID(), UUID.randomUUID(), email, handle, PasswordHashing(password)))
+      user <- Future(PendingUser(UUID.randomUUID(), UUID.randomUUID(), email, handle, PasswordHashing(password), city, timeZoneId))
       batchResult <- {
         val batch = BatchStatement()
         batch.add(PendingUserRecord.prepareInsert(user))

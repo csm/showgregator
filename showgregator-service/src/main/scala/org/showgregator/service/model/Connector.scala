@@ -5,3 +5,5 @@ import com.websudos.phantom.zookeeper.{CassandraConnector, SimpleCassandraConnec
 trait Connector extends SimpleCassandraConnector {
   val keySpace = "showgregator"
 }
+
+object Connector extends Connector

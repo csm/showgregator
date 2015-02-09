@@ -6,6 +6,7 @@ import com.datastax.driver.core.Cluster
 import com.twitter.logging.{Level, ConsoleHandler, Logger}
 import org.scalatest.{BeforeAndAfterAll, Matchers, FlatSpec}
 import org.showgregator.service.session.DefaultSessionStore
+import org.showgregator.service.tools.InitTables
 
 /**
  * Created by cmarshall on 2/1/15.

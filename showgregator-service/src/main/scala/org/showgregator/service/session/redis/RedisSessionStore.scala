@@ -9,7 +9,7 @@ import java.util.UUID
 import scala.concurrent.ExecutionContext
 import org.joda.time.format.ISODateTimeFormat
 import org.joda.time.{Duration, DateTime}
-import org.showgregator.service.model.{TransientUser, User, BaseUser}
+import org.showgregator.service.model.{City, TransientUser, User, BaseUser}
 import java.io.ByteArrayOutputStream
 import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.io.{Input, Output}
@@ -35,6 +35,20 @@ object RedisSessionStore {
             kryo.writeObject(out, true)
             kryo.writeObject(out, h)
           }
+          case None =>
+            kryo.writeObject(out, false)
+        }
+        u.city match {
+          case Some(c) =>
+            kryo.writeObject(out, true)
+            kryo.writeObject(out, c)
+          case None =>
+            kryo.writeObject(out, false)
+        }
+        u.timeZoneId match {
+          case Some(tz) =>
+            kryo.writeObject(out, true)
+            kryo.writeObject(out, tz)
           case None =>
             kryo.writeObject(out, false)
         }
@@ -64,7 +78,15 @@ object RedisSessionStore {
       } else {
         None
       }
-      User(uid, email, handle)
+      val city = kryo.readObject(input, classOf[Boolean]) match {
+        case true => Some(kryo.readObject(input, classOf[City]))
+        case false => None
+      }
+      val tz = kryo.readObject(input, classOf[Boolean]) match {
+        case true => Some(kryo.readObject(input, classOf[String]))
+        case false => None
+      }
+      User(uid, email, handle, city = city, timeZoneId = tz)
     } else {
       val email = kryo.readObject(input, classOf[String])
       val userId = kryo.readObject(input, classOf[UUID])

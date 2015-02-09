@@ -12,15 +12,23 @@ import org.joda.time.Duration
 import com.twitter.util.Future
 import java.nio.ByteBuffer
 
-case class PendingUser(id: UUID, user: UUID, email: String, handle: Option[String], hashedPassword: HashedPassword,
-                       transientEmail: Option[String] = None, transientId: Option[UUID] = None)
+case class PendingUser(id: UUID,
+                       user: UUID,
+                       email: String,
+                       handle: Option[String],
+                       hashedPassword: HashedPassword,
+                       city: Option[City],
+                       timeZoneId: Option[String],
+                       transientEmail: Option[String] = None,
+                       transientId: Option[UUID] = None)
 
 object PendingUser {
   def createUser(email: String, handle: Option[String], password: Array[Char],
-                 userId: Option[UUID], transientEmail: Option[String] = None, transientId: Option[UUID] = None)(implicit session: Session): Future[Option[PendingUser]] = {
+                 userId: Option[UUID], transientEmail: Option[String] = None, transientId: Option[UUID] = None,
+                 city: Option[City] = None, timeZoneId: Option[String] = None)(implicit session: Session): Future[Option[PendingUser]] = {
     for {
       user <- Future(PendingUser(UUID.randomUUID(), userId.getOrElse(UUID.randomUUID()), email, handle, PasswordHashing(password),
-        transientEmail, transientId))
+        city, timeZoneId, transientEmail, transientId))
       insert <- {
         val batch = BatchStatement()
         batch.add(PendingUserRecord.prepareInsert(user))
@@ -45,10 +53,19 @@ sealed class PendingUserRecord extends CassandraTable[PendingUserRecord, Pending
   object hash extends BlobColumn(this)
   object transientEmail extends OptionalStringColumn(this)
   object transientId extends OptionalUUIDColumn(this)
+  // City, todo, make this a UDT
+  object city_name extends OptionalStringColumn(this)
+  object city_county extends OptionalStringColumn(this)
+  object city_state extends OptionalStringColumn(this)
+  object city_country extends OptionalStringColumn(this)
+  object timezone extends OptionalStringColumn(this)
 
   def fromRow(r: Row): PendingUser = PendingUser(id(r), user(r), email(r), handle(r),
     HashedPassword(alg(r), salt(r).asBytes, iterations(r), hash(r).asBytes),
-    transientEmail(r), transientId(r))
+    (city_name(r), city_state(r), city_country(r)) match {
+      case (Some(name), Some(state), Some(country)) => Some(City(name, city_county(r), state, country, None, None))
+      case _ => None
+    }, timezone(r), transientEmail(r), transientId(r))
 }
 
 object PendingUserRecord extends PendingUserRecord with Connector {
@@ -72,6 +89,13 @@ object PendingUserRecord extends PendingUserRecord with Connector {
       .value(_.salt, ByteBuffer.wrap(user.hashedPassword.salt))
       .value(_.iterations, user.hashedPassword.iterations)
       .value(_.hash, ByteBuffer.wrap(user.hashedPassword.hash))
+      .value(_.transientEmail, user.transientEmail)
+      .value(_.transientId, user.transientId)
+      .value(_.city_name, user.city.map(_.name))
+      .value(_.city_county, user.city.flatMap(_.county))
+      .value(_.city_state, user.city.map(_.state))
+      .value(_.city_country, user.city.map(_.country))
+      .value(_.timezone, user.timeZoneId)
       .ttl(ttl.toStandardSeconds.getSeconds)
   }
 
@@ -97,7 +121,7 @@ object PendingUserRecord extends PendingUserRecord with Connector {
         case Some(pu) => {
           val batch = BatchStatement()
           val calendar = Calendar(UUID.randomUUID(), "", Map(pu.user -> (CalendarPermissions.AllPermission & ~CalendarPermissions.Share)))
-          val user = User(pu.user, pu.email, pu.handle, pu.hashedPassword)
+          val user = User(pu.user, pu.email, pu.handle, pu.hashedPassword, pu.city, pu.timeZoneId)
           User.prepareCreate(batch, user, calendar)
           batch.add(prepareDelete(pu.id))
           batch.add(ReversePendingUserRecord.prepareDelete(pu.email))

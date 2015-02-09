@@ -5,11 +5,23 @@ import com.websudos.phantom.Implicits._
 import com.websudos.phantom.keys.PartitionKey
 import com.datastax.driver.core.Row
 import com.twitter.util.Future
+import org.joda.time.DateTimeZone
+import org.showgregator.core.geo.USLocales
 
 case class TransientUser(_email: String,
                          _userId: UUID,
-                         id: UUID = null)
-  extends BaseUser(_userId, _email)
+                         id: UUID = null,
+                         city: Option[City] = None,
+                         timeZoneId: Option[String] = None)
+  extends BaseUser(_userId, _email) {
+
+  override def timeZone(implicit session: Session): DateTimeZone = {
+    timeZoneId.map(DateTimeZone.forID) orElse USLocales.TimeZones.findZoneId(USLocales.City(city.get.name,
+      USLocales.County(city.get.name,
+        USLocales.State(city.get.state, "", USLocales.Countries.USA))))
+      .map(DateTimeZone.forID) getOrElse DateTimeZone.UTC
+  }
+}
 
 case class ReverseTransientUser(email: String, id: UUID)
 

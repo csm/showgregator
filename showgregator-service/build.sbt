@@ -33,6 +33,8 @@ projectDependencies += "joda-time" % "joda-time" % "2.6"
 
 projectDependencies += "com.websudos" %% "phantom-dsl" % "1.5.0"
 
+projectDependencies += "com.websudos" %% "phantom-udt" % "1.5.0"
+
 projectDependencies += "com.websudos" %% "phantom-zookeeper" % "1.5.0"
 
 projectDependencies += "com.twitter" %% "finatra" % "1.6.0"
@@ -101,3 +103,5 @@ dependencyOverrides += "commons-codec" % "commons-codec" % "1.6"
 dependencyOverrides += "jline" % "jline" % "1.0"
 
 dependencyOverrides += "log4j" % "log4j" % "1.2.16"
+
+dependencyOverrides += "commons-pool" % "commons-pool" % "1.5.4"

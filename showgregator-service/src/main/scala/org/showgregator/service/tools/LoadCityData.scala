@@ -4,7 +4,7 @@ import java.io.{FilenameFilter, File}
 
 import com.datastax.driver.core.Cluster
 import com.twitter.util.Await
-import org.showgregator.service.model.{County, City, CountyRecord, CityRecord}
+import org.showgregator.service.model.{City, CityRecord}
 
 import scala.io.Source
 import scala.util.parsing.json.{JSONObject, JSONArray, JSON}
@@ -13,7 +13,7 @@ import scala.util.parsing.json.{JSONObject, JSONArray, JSON}
  * Created by cmarshall on 2/5/15.
  */
 object LoadCityData extends App{
-  def run(path: String, keySpace: String = "citydata") = {
+  def run(path: String, keySpace: String = "showgregator") = {
     val cluster = Cluster.builder()
       .addContactPoint("127.0.0.1")
       .build()
@@ -27,7 +27,6 @@ object LoadCityData extends App{
     }
 
     Await.result(CityRecord.create.execute())
-    Await.result(CountyRecord.create.execute())
 
     val dir = new File(path)
     println(s"reading dir $dir, exists? ${dir.exists()} isdir? ${dir.isDirectory}")
@@ -38,9 +37,9 @@ object LoadCityData extends App{
       JSON.parseRaw(Source.fromFile(new File(dir, file)).mkString) match {
         case Some(a:JSONArray) => a.list.foreach {
           case obj:JSONObject => {
-            val county = County(obj.obj.get("county_name").get.asInstanceOf[String],
-              obj.obj.get("state_abbreviation").get.asInstanceOf[String], "US")
-            val city = City(obj.obj.get("name").get.asInstanceOf[String], county.name, county.state, county.country,
+            val city = City(obj.obj.get("name").get.asInstanceOf[String],
+                obj.obj.get("county_name").asInstanceOf[Option[String]],
+                obj.obj.get("state_name").get.asInstanceOf[String], "US",
               obj.obj.get("primary_latitude").flatMap {
                 case s:String => Some(s.toDouble)
                 case d:Double => Some(d)
@@ -50,7 +49,6 @@ object LoadCityData extends App{
                 case d:Double => Some(d)
                 case _ => None
               })
-            Await.result(CountyRecord.insertCounty(county))
             Await.result(CityRecord.insertCity(city))
           }
 

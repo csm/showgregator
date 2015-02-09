@@ -15,7 +15,19 @@ function validate_and_register() {
         var confirm = document.getElementById('confirm').value;
         if (password.length > 0) {
             if (password == confirm) {
-                form.submit();
+                if ("geolocation" in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        function(pos) {
+                            document.getElementById('lat').value = pos.coords.latitude;
+                            document.getElementById('lon').value = pos.coords.longitude;
+                            form.submit();
+                        }, function(err) {
+                            form.submit();
+                        }
+                    );
+                } else {
+                    form.submit();
+                }
             } else {
                 var oops = document.getElementById('password_mismatch');
                 oops.innerHTML = "Passwords don't match.";

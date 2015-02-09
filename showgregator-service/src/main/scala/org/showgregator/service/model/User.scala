@@ -3,6 +3,9 @@ package org.showgregator.service.model
 import java.util.UUID
 
 import com.websudos.phantom.query.{InsertQuery, BatchableQuery}
+import org.joda.time.DateTimeZone
+import org.showgregator.core.geo.USLocales
+import org.showgregator.core.geo.USLocales.{States, State, County}
 import org.showgregator.core.{PasswordHashing, HashedPassword}
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits.{IntColumn, BlobColumn, StringColumn}
@@ -19,11 +22,28 @@ import com.websudos.phantom.Implicits._
  * @param userId
  * @param email
  */
-abstract class BaseUser(val userId: UUID, val email:String)
+abstract class BaseUser(val userId: UUID, val email:String) {
+  def timeZone(implicit session: Session): DateTimeZone
+}
 
-case class User(id: UUID, _email: String, handle: Option[String], hashedPassword: HashedPassword = null) extends BaseUser(id, _email) {
+case class User(id: UUID, _email: String, handle: Option[String], hashedPassword: HashedPassword = null,
+                county: Option[County], timeZoneId: Option[String]) extends BaseUser(id, _email) {
   def withEmail(newEmail: String): User = {
-    User(id, newEmail, handle, hashedPassword)
+    User(id, newEmail, handle, hashedPassword, county, timeZoneId)
+  }
+
+  override def timeZone(implicit session: Session): DateTimeZone = {
+    timeZoneId.map(DateTimeZone.forID).orElse(
+      county.flatMap(c => USLocales.TimeZones.findZoneForCounty(c)).map(DateTimeZone.forID))
+    .getOrElse(DateTimeZone.UTC)
+  }
+
+  def withCounty(newCounty: Option[County]): User = {
+    User(id, email, handle, hashedPassword, newCounty, timeZoneId)
+  }
+
+  def withTimeZone(newTimeZone: Option[String]): User = {
+    User(id, email, handle, hashedPassword, county, newTimeZone)
   }
 }
 
@@ -35,9 +55,16 @@ sealed class UserRecord extends CassandraTable[UserRecord, User] {
   object salt extends BlobColumn(this)
   object iterations extends IntColumn(this)
   object hash extends BlobColumn(this)
+  object county extends OptionalStringColumn(this)
+  object state extends OptionalStringColumn(this)
+  object timezone extends OptionalStringColumn(this)
 
   def fromRow(r: Row): User = User(id(r), email(r), handle(r),
-    HashedPassword(alg(r), salt(r).asBytes, iterations(r), hash(r).asBytes))
+    HashedPassword(alg(r), salt(r).asBytes, iterations(r), hash(r).asBytes),
+      (county(r), state(r)) match {
+        case (Some(name), Some(state)) => States.forAbbrev(state).map(st => County(name, st))
+        case _ => None
+      }, timezone(r))
 }
 
 object User {
@@ -54,7 +81,7 @@ object User {
   def createUser(id: UUID, email: String, handle: Option[String], password: Array[Char])(implicit session: Session): Future[Option[User]] = {
     val calendar = Calendar(UUID.randomUUID(), "", Map(id -> (CalendarPermissions.AllPermission & ~CalendarPermissions.Share)))
     for {
-      user <- Future(User(id, email, handle, PasswordHashing(password)))
+      user <- Future(User(id, email, handle, PasswordHashing(password), None, None))
       insertBatch <- {
         val batch = BatchStatement()
         prepareCreate(batch, user, calendar)
@@ -77,6 +104,9 @@ object User {
       .value(_.iterations, user.hashedPassword.iterations)
       .value(_.salt, ByteBuffer.wrap(user.hashedPassword.salt))
       .value(_.hash, ByteBuffer.wrap(user.hashedPassword.hash))
+      .value(_.county, user.county.map(_.name))
+      .value(_.state, user.county.map(_.state.abbrev))
+      .value(_.timezone, user.timeZoneId)
   }
 
   def prepareDelete(id: UUID, email: String) = {
@@ -105,7 +135,7 @@ object User {
    * @return A future that will contain the updated user if the statements were applied.
    */
   def updateUserEmail(user: User, email: String)(implicit session: Session): Future[Option[User]] = {
-    val updated = User(user.userId, email, user.handle, user.hashedPassword)
+    val updated = User(user.userId, email, user.handle, user.hashedPassword, user.county, user.timeZoneId)
     BatchStatement()
       .add(prepareDelete(user.userId, user.email))
       .add(prepareInsert(updated))
@@ -127,7 +157,7 @@ object User {
       .modify(_.handle setTo handle)
       .execute()
       .map(rs => if (rs.wasApplied()) {
-        Some(User(user.id, user.email, handle, user.hashedPassword))
+        Some(User(user.id, user.email, handle, user.hashedPassword, user.county, user.timeZoneId))
       } else {
         None
       })
@@ -145,10 +175,29 @@ object User {
         .and(_.hash setTo ByteBuffer.wrap(hash.hash))
         .execute()
     } yield if (update.wasApplied()) {
-      Some(User(user.id, user.email, user.handle, hash))
+      Some(User(user.id, user.email, user.handle, hash, user.city, user.timeZoneId))
     } else {
       None
     }
+  }
+
+  def updateUserCounty(user: User, county: Option[County])(implicit session: Session): Future[Option[User]] = {
+    UserRecord.update
+      .where(_.id eqs user.id)
+      .and(_.email eqs user.email)
+      .modify(_.county setTo county.map(_.name))
+      .and(_.state setTo county.map(_.state.abbrev))
+      .execute()
+      .map(rs => if (rs.wasApplied()) Some(user.withCounty(county)) else None)
+  }
+
+  def updateUserTimeZone(user: User, timeZone: Option[String])(implicit session: Session): Future[Option[User]] = {
+    UserRecord.update
+      .where(_.id eqs user.id)
+      .and(_.email eqs user.email)
+      .modify(_.timezone setTo timeZone)
+      .execute()
+      .map(rs => if (rs.wasApplied()) Some(user.withTimeZone(timeZone)) else None)
   }
 }
 
