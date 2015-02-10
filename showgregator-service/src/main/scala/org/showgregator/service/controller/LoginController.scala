@@ -1,6 +1,8 @@
 package org.showgregator.service.controller
 
 import com.websudos.phantom.Implicits.Session
+import org.showgregator.core.crypto.PasswordHashing
+import org.showgregator.core.util.UUIDs
 import scala.concurrent.ExecutionContext
 import org.showgregator.service.model._
 import com.twitter.util.{Duration, Future}
@@ -44,6 +46,7 @@ class LoginController(implicit val sessionStore: SessionStore,
     (request.params.get("email"), request.params.get("password")) match {
       case (Some(email), Some(password)) => {
         for {
+
           user:Option[User] <- UserRecord.getByEmail(email)
           reversePendingUser <- if (user.isEmpty)
             ReversePendingUserRecord.getByEmail(email)

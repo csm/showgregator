@@ -7,6 +7,7 @@ import com.datastax.driver.core.Row
 import com.twitter.util.Future
 import org.joda.time.DateTimeZone
 import org.showgregator.core.geo.USLocales
+import org.showgregator.core.geo.USLocales.City
 
 case class TransientUser(_email: String,
                          _userId: UUID,
@@ -16,10 +17,7 @@ case class TransientUser(_email: String,
   extends BaseUser(_userId, _email) {
 
   override def timeZone(implicit session: Session): DateTimeZone = {
-    timeZoneId.map(DateTimeZone.forID) orElse USLocales.TimeZones.findZoneId(USLocales.City(city.get.name,
-      USLocales.County(city.get.name,
-        USLocales.State(city.get.state, "", USLocales.Countries.USA))))
-      .map(DateTimeZone.forID) getOrElse DateTimeZone.UTC
+    timeZoneId.map(DateTimeZone.forID) orElse city.flatMap(c => USLocales.TimeZones.findZoneId(c)).map(DateTimeZone.forID) getOrElse DateTimeZone.UTC
   }
 }
 

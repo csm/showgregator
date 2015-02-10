@@ -2,12 +2,13 @@ package org.showgregator.service.model
 
 import java.util.UUID
 
-import org.showgregator.core.{PasswordHashing, HashedPassword}
+import org.showgregator.core.crypto.{PasswordHashing, HashedPassword}
+import org.showgregator.core.geo.USLocales.{States, County, City}
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits._
 import com.websudos.phantom.keys.PartitionKey
 import com.datastax.driver.core.Row
-import org.showgregator.core.ByteBuffers.AsByteArray
+import org.showgregator.core.util.ByteBuffers.AsByteArray
 import org.joda.time.Duration
 import com.twitter.util.Future
 import java.nio.ByteBuffer
@@ -54,16 +55,15 @@ sealed class PendingUserRecord extends CassandraTable[PendingUserRecord, Pending
   object transientEmail extends OptionalStringColumn(this)
   object transientId extends OptionalUUIDColumn(this)
   // City, todo, make this a UDT
-  object city_name extends OptionalStringColumn(this)
-  object city_county extends OptionalStringColumn(this)
-  object city_state extends OptionalStringColumn(this)
-  object city_country extends OptionalStringColumn(this)
+  object city extends OptionalStringColumn(this)
+  object county extends OptionalStringColumn(this)
+  object state extends OptionalStringColumn(this)
   object timezone extends OptionalStringColumn(this)
 
   def fromRow(r: Row): PendingUser = PendingUser(id(r), user(r), email(r), handle(r),
     HashedPassword(alg(r), salt(r).asBytes, iterations(r), hash(r).asBytes),
-    (city_name(r), city_state(r), city_country(r)) match {
-      case (Some(name), Some(state), Some(country)) => Some(City(name, city_county(r), state, country, None, None))
+    (city(r), county(r), state(r)) match {
+      case (Some(name), Some(county), Some(state)) => States.forAbbrev(state).flatMap(st => Some(City(name, County(county, st))))
       case _ => None
     }, timezone(r), transientEmail(r), transientId(r))
 }
@@ -91,10 +91,9 @@ object PendingUserRecord extends PendingUserRecord with Connector {
       .value(_.hash, ByteBuffer.wrap(user.hashedPassword.hash))
       .value(_.transientEmail, user.transientEmail)
       .value(_.transientId, user.transientId)
-      .value(_.city_name, user.city.map(_.name))
-      .value(_.city_county, user.city.flatMap(_.county))
-      .value(_.city_state, user.city.map(_.state))
-      .value(_.city_country, user.city.map(_.country))
+      .value(_.city, user.city.map(_.name))
+      .value(_.county, user.city.map(_.county.name))
+      .value(_.state, user.city.map(_.county.state.abbrev))
       .value(_.timezone, user.timeZoneId)
       .ttl(ttl.toStandardSeconds.getSeconds)
   }

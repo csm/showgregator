@@ -1,4 +1,4 @@
-package org.showgregator.core
+package org.showgregator.core.util
 
 import java.nio.ByteBuffer
 

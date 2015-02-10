@@ -1,8 +1,8 @@
-package org.showgregator.core
+package org.showgregator.core.crypto
 
 import java.security.SecureRandom
-import javax.crypto.spec.PBEKeySpec
 import javax.crypto.SecretKeyFactory
+import javax.crypto.spec.PBEKeySpec
 
 case class HashedPassword(alg: String, salt: Array[Byte], iterations: Int, hash: Array[Byte])
 

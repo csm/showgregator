@@ -2,18 +2,17 @@ package org.showgregator.service.model
 
 import java.util.UUID
 
-import com.websudos.phantom.query.{InsertQuery, BatchableQuery}
 import org.joda.time.DateTimeZone
 import org.showgregator.core.geo.USLocales
-import org.showgregator.core.geo.USLocales.{States, State, County}
-import org.showgregator.core.{PasswordHashing, HashedPassword}
+import org.showgregator.core.geo.USLocales.{City, States, County}
+import org.showgregator.core.crypto.{HashedPassword, PasswordHashing}
 import com.websudos.phantom.CassandraTable
 import com.websudos.phantom.Implicits.{IntColumn, BlobColumn, StringColumn}
 import com.websudos.phantom.keys.PartitionKey
 import com.datastax.driver.core.Row
 import java.nio.ByteBuffer
 
-import org.showgregator.core.ByteBuffers.AsByteArray
+import org.showgregator.core.util.ByteBuffers.AsByteArray
 import com.twitter.util.Future
 import com.websudos.phantom.Implicits._
 
@@ -27,23 +26,23 @@ abstract class BaseUser(val userId: UUID, val email:String) {
 }
 
 case class User(id: UUID, _email: String, handle: Option[String], hashedPassword: HashedPassword = null,
-                county: Option[County], timeZoneId: Option[String]) extends BaseUser(id, _email) {
+                city: Option[City], timeZoneId: Option[String]) extends BaseUser(id, _email) {
   def withEmail(newEmail: String): User = {
-    User(id, newEmail, handle, hashedPassword, county, timeZoneId)
+    User(id, newEmail, handle, hashedPassword, city, timeZoneId)
   }
 
   override def timeZone(implicit session: Session): DateTimeZone = {
     timeZoneId.map(DateTimeZone.forID).orElse(
-      county.flatMap(c => USLocales.TimeZones.findZoneForCounty(c)).map(DateTimeZone.forID))
+      city.flatMap(c => USLocales.TimeZones.findZoneForCounty(c.county)).map(DateTimeZone.forID))
     .getOrElse(DateTimeZone.UTC)
   }
 
-  def withCounty(newCounty: Option[County]): User = {
-    User(id, email, handle, hashedPassword, newCounty, timeZoneId)
+  def withCity(newCity: Option[City]): User = {
+    User(id, email, handle, hashedPassword, newCity, timeZoneId)
   }
 
   def withTimeZone(newTimeZone: Option[String]): User = {
-    User(id, email, handle, hashedPassword, county, newTimeZone)
+    User(id, email, handle, hashedPassword, city, newTimeZone)
   }
 }
 
@@ -55,14 +54,16 @@ sealed class UserRecord extends CassandraTable[UserRecord, User] {
   object salt extends BlobColumn(this)
   object iterations extends IntColumn(this)
   object hash extends BlobColumn(this)
+  object city extends OptionalStringColumn(this)
   object county extends OptionalStringColumn(this)
   object state extends OptionalStringColumn(this)
   object timezone extends OptionalStringColumn(this)
 
   def fromRow(r: Row): User = User(id(r), email(r), handle(r),
     HashedPassword(alg(r), salt(r).asBytes, iterations(r), hash(r).asBytes),
-      (county(r), state(r)) match {
-        case (Some(name), Some(state)) => States.forAbbrev(state).map(st => County(name, st))
+      (city(r), county(r), state(r)) match {
+        case (Some(city), Some(county), Some(state)) => States.forAbbrev(state).map(st => City(city, County(county, st)))
+        case (None, Some(county), Some(state)) => States.forAbbrev(state).map(st => City("", County(county, st)))
         case _ => None
       }, timezone(r))
 }
@@ -104,8 +105,9 @@ object User {
       .value(_.iterations, user.hashedPassword.iterations)
       .value(_.salt, ByteBuffer.wrap(user.hashedPassword.salt))
       .value(_.hash, ByteBuffer.wrap(user.hashedPassword.hash))
-      .value(_.county, user.county.map(_.name))
-      .value(_.state, user.county.map(_.state.abbrev))
+      .value(_.city, user.city.map(_.name))
+      .value(_.county, user.city.map(_.county.name))
+      .value(_.state, user.city.map(_.county.state.abbrev))
       .value(_.timezone, user.timeZoneId)
   }
 
@@ -157,7 +159,7 @@ object User {
       .modify(_.handle setTo handle)
       .execute()
       .map(rs => if (rs.wasApplied()) {
-        Some(User(user.id, user.email, handle, user.hashedPassword, user.county, user.timeZoneId))
+        Some(User(user.id, user.email, handle, user.hashedPassword, user.city, user.timeZoneId))
       } else {
         None
       })
@@ -181,14 +183,15 @@ object User {
     }
   }
 
-  def updateUserCounty(user: User, county: Option[County])(implicit session: Session): Future[Option[User]] = {
+  def updateUserCounty(user: User, city: Option[City])(implicit session: Session): Future[Option[User]] = {
     UserRecord.update
       .where(_.id eqs user.id)
       .and(_.email eqs user.email)
-      .modify(_.county setTo county.map(_.name))
-      .and(_.state setTo county.map(_.state.abbrev))
+      .modify(_.city setTo city.map(_.name))
+      .and(_.county setTo city.map(_.county.name))
+      .and(_.state setTo city.map(_.county.state.abbrev))
       .execute()
-      .map(rs => if (rs.wasApplied()) Some(user.withCounty(county)) else None)
+      .map(rs => if (rs.wasApplied()) Some(user.withCity(city)) else None)
   }
 
   def updateUserTimeZone(user: User, timeZone: Option[String])(implicit session: Session): Future[Option[User]] = {

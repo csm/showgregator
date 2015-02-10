@@ -1,5 +1,7 @@
 package org.showgregator.core.geo
 
+import java.io.File
+
 import org.joda.time.{DateTime, DateTimeZone}
 
 import scala.io.Source
@@ -78,33 +80,24 @@ object USLocales {
     val Wyoming = State("Wyoming", "WY", "56", USA)
 
     def forAbbrev(abbrev: String): Option[State] = {
-      val r = currentMirror.reflect(States)
-      r.symbol.typeSignature.members.toStream
-        .collect { case s: TermSymbol if !s.isMethod => r.reflectField(s) }
-        .map(_.get)
-        .filter(_.isInstanceOf[State])
-        .map(_.asInstanceOf[State])
-        .find(s => s.abbrev.equalsIgnoreCase(abbrev))
+      allStates().find(s => s.abbrev.equalsIgnoreCase(abbrev))
     }
 
     def forName(name: String): Option[State] = {
-      val r = currentMirror.reflect(States)
-      r.symbol.typeSignature.members.toStream
-        .collect { case s: TermSymbol if !s.isMethod => r.reflectField(s) }
-        .map(_.get)
-        .filter(_.isInstanceOf[State])
-        .map(_.asInstanceOf[State])
-        .find(s => s.name.equals(name))
+      allStates().find(s => s.name.equals(name))
     }
 
     def forFipsCode(code: String): Option[State] = {
+      allStates().find(s => s.fipsCode.equals(code))
+    }
+
+    def allStates():Seq[State] = {
       val r = currentMirror.reflect(States)
       r.symbol.typeSignature.members.toStream
         .collect { case s: TermSymbol if !s.isMethod => r.reflectField(s) }
         .map(_.get)
         .filter(_.isInstanceOf[State])
         .map(_.asInstanceOf[State])
-        .find(s => s.fipsCode.equals(code))
     }
   }
 
@@ -324,11 +317,9 @@ object USLocales {
   }
 
   object Cities {
-    private def loadCityData(): Seq[City] = {
-      States.getClass.getFields.filter(f => classOf[State].isAssignableFrom(f.getType))
-        .map(f => f.get(States).asInstanceOf[State])
-        .map(s => {
-        val input = Source.fromInputStream(USLocales.getClass.getResourceAsStream(s"city-data/US/${s.abbrev}.json")).mkString
+    def loadCityData(dir: File): Seq[City] = {
+      States.allStates().map(s => {
+        val input = Source.fromFile(new File(dir, s"${s.abbrev}.json")).mkString
         JSON.parseRaw(input) match {
           case Some(a: JSONArray) => a.list.map {
             case obj: JSONObject => try {
@@ -345,14 +336,6 @@ object USLocales {
           case _ => List()
         }
       }).flatten.filter(_.isDefined).map(_.get)
-    }
-
-    private val cities = loadCityData()
-
-    def countyFor(city: String, state: String): Option[County] = {
-      cities.find(c => c.name.equals(city)
-        && (c.county.state.name.equals(state) || c.county.state.abbrev.equals(state)))
-        .map(_.county)
     }
   }
 

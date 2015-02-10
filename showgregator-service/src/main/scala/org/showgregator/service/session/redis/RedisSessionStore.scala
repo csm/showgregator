@@ -2,14 +2,15 @@ package org.showgregator.service.session.redis
 
 import com.twitter.logging.Logger
 import com.twitter.util.Future
-import org.showgregator.core.Bytes
+import org.showgregator.core.geo.USLocales.City
+import org.showgregator.core.util.Bytes
 import org.showgregator.service.session.{Session, SessionStore}
 import scredis._
 import java.util.UUID
 import scala.concurrent.ExecutionContext
 import org.joda.time.format.ISODateTimeFormat
 import org.joda.time.{Duration, DateTime}
-import org.showgregator.service.model.{City, TransientUser, User, BaseUser}
+import org.showgregator.service.model.{TransientUser, User, BaseUser}
 import java.io.ByteArrayOutputStream
 import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.io.{Input, Output}

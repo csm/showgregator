@@ -3,13 +3,7 @@
         <title>LOG IN to SHOWGREGATOR</title>
         <link rel="stylesheet" href="/css/main.css">
         <link rel="stylesheet" href="/css/login.css">
-        <script language="javascript">
-            function getNext() {
-                var next = window.location.hash.substring(1);
-                if (next) {
-                    document.getElementById("then").value = next;
-                }
-            }
+        <script language="javascript" src="/js/login.js">
         </script>
     </head>
     <body onload="getNext();">
@@ -37,9 +31,11 @@
                     <p>
                         <span class="label"></span>
                         <span>
-                            <span class="button" onclick="document.getElementById('login').submit(); return false;">Login</span>
+                            <span class="button" onclick="login(); return false;">Login</span>
                         </span>
                     </p>
+                    <input type="hidden" name="lat" id="lat">
+                    <input type="hidden" name="lon" id="lon">
                 </form>
             </div>
         </div>
