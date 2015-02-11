@@ -1,4 +1,4 @@
-[Developments, as they occur to us to talk about them.](https://showgregator.tumblr.com)
+[Developments, as they occur to us to talk about them.](http://showgregator.tumblr.com)
 
 Quickstart:
 
