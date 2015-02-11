@@ -1,3 +1,5 @@
+[Developments, as they occur to us to talk about them.](https://showgregator.tumblr.com)
+
 Quickstart:
 
 1. Install cassandra and redis.

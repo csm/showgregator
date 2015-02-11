@@ -2,11 +2,11 @@ package org.showgregator.service.controller
 
 import com.websudos.phantom.Implicits.Session
 import org.showgregator.core.crypto.PasswordHashing
+import org.showgregator.core.geo.Location
 import org.showgregator.core.util.UUIDs
 import scala.concurrent.ExecutionContext
 import org.showgregator.service.model._
 import com.twitter.util.{Duration, Future}
-import org.showgregator.core.{UUIDs, HashedPassword, PasswordHashing}
 import java.security.MessageDigest
 import com.twitter.finatra.ResponseBuilder
 import org.showgregator.service.finagle.FinagleFutures.ScalaFutureWrapper
@@ -46,7 +46,13 @@ class LoginController(implicit val sessionStore: SessionStore,
     (request.params.get("email"), request.params.get("password")) match {
       case (Some(email), Some(password)) => {
         for {
-
+          location <- {
+            request.params.get("lat").flatMap(lat => request.params.get("lon").map(lon => (lat, lon))) match {
+              case Some((lat, lon)) => Location.findByGeolocationStrings(lat, lon).asFinagle
+                // TODO, probably need to inspect load balancer header, if load balanced.
+              case None => Location.findByAddress(request.remoteAddress).asFinagle
+            }
+          }
           user:Option[User] <- UserRecord.getByEmail(email)
           reversePendingUser <- if (user.isEmpty)
             ReversePendingUserRecord.getByEmail(email)
@@ -67,7 +73,7 @@ class LoginController(implicit val sessionStore: SessionStore,
           }
           session <- user match {
             case Some(u) => {
-              val s = UserSession(UUID.randomUUID(), u, DateTime.now(), DateTime.now().plusHours(12))
+              val s = UserSession(UUID.randomUUID(), u.withCity(u.city.flatMap(_ => location)), DateTime.now(), DateTime.now().plusHours(12))
               sessionStore.put(s).map(if (_) Some(s) else None)
             }
             case None => Future.value(None)

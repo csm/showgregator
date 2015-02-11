@@ -1,7 +1,7 @@
 package org.showgregator.core.test
 
 import org.scalatest.{Matchers, FlatSpec}
-import org.showgregator.core.PasswordHashing
+import org.showgregator.core.crypto.PasswordHashing
 
 class PasswordHashingSpec extends FlatSpec with Matchers {
   "generate password hash" should "complete without exception" in {

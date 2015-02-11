@@ -13,7 +13,7 @@ import reflect.runtime.currentMirror
 object USLocales {
 
   case class Country(name: String, abbrev: String)
-  case class City(name: String, county: County)
+  case class City(name: String, county: County, latitude: Option[Double] = None, longitude: Option[Double] = None)
   case class County(name: String, state: State)
   case class State(name: String, abbrev: String, fipsCode: String, country: Country)
   case class District(name: String, abbrev: String, country: Country)
@@ -324,8 +324,16 @@ object USLocales {
           case Some(a: JSONArray) => a.list.map {
             case obj: JSONObject => try {
               Some(City(obj.obj.get("name").get.asInstanceOf[String],
-                County(obj.obj.get("county_name").get.asInstanceOf[String],
-                  States.forAbbrev(obj.obj.get("state_abbreviation").get.asInstanceOf[String]).get)))
+                County(obj.obj.get("county_name").get.asInstanceOf[String], s),
+                  obj.obj.get("primary_latitude").flatMap {
+                    case s:String => Some(s.toDouble)
+                    case d:Double => Some(d)
+                    case _ => None
+                  }, obj.obj.get("primary_longitude").flatMap {
+                    case s:String => Some(s.toDouble)
+                    case d:Double => Some(d)
+                    case _ => None
+                  }))
             } catch {
               case t:Throwable => None
             }
